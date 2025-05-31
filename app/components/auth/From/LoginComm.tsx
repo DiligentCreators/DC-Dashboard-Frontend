@@ -13,23 +13,39 @@ import { Button } from '@/components/ui/button'
 import Input from '@/app/components/shared/Input'
 import FormLayout from '@/app/components/layout/Form/FormLayout'
 import { UserType } from '@/app/types/UserType'
-import { useAuthStore } from '@/app/store/useUserStore'
+// import { useAuthStore } from '@/app/store/useUserStore'
 import FieldError from '@/app/components/Validation/FieldError'
+import { useAuth } from '@/app/hook/auth'
 import Link from 'next/link'
 const LoginComm = () => {
 
-const auth = useAuthStore()
+  const [errors, setErrors] = useState<any>({})
+  const [status, setStatus] = useState<string | null>(null)
+
+  const { login } = useAuth({
+    middleware: 'guest',
+    redirectIfAuthenticated: '/dashboard',
+  })
   // state
   const [credentials, setCredentials] =
     useState<Pick<UserType, 'email' | 'password'>>({email: '', password: ''
     })
 
   // handle formSubmit
+  // const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault()
+  //   await auth.login(credentials)
+  // }
+  // const { user } = useAuthStore()
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    await auth.login(credentials)
+   await login({
+      ...credentials,
+      setErrors,
+      setStatus,
+    })
   }
-  const { user } = useAuthStore()
+
 
 
 
@@ -41,7 +57,6 @@ const auth = useAuthStore()
 
   return (
     <FormLayout>
-      {user?.name}
       <Card className={cardStyle}>
         <CardHeader className={cardHeaderStyle}>
           <CardTitle className={CardTitleStyle}>

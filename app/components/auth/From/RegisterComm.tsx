@@ -12,12 +12,17 @@ import { Button } from '@/components/ui/button'
 import Input from '@/app/components/shared/Input'
 import FormLayout from '@/app/components/layout/Form/FormLayout'
 import { UserType } from '@/app/types/UserType'
-import { useAuthStore } from '@/app/store/useUserStore'
+// import { useAuthStore } from '@/app/store/useUserStore'
 import FieldError from '@/app/components/Validation/FieldError'
 import Link from 'next/link'
-const RegisterComm = () => {
+import { useAuth } from '@/app/hook/auth'
 
-  const auth = useAuthStore()
+
+const RegisterComm = () => {
+  const { register } = useAuth({
+    middleware: 'guest',
+    redirectIfAuthenticated: '/dashboard',
+  })
 
   // state
   const [credentials, setCredentials] =
@@ -30,11 +35,23 @@ const RegisterComm = () => {
 
       })
 
+  const [errors, setErrors] = useState<any>({})
+
   // handle formSubmit
+  // const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault()
+  //   register(credentials)
+  //   // await auth.register(credentials)
+  // }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    await auth.register(credentials)
+    register({
+      ...credentials,
+      setErrors,
+    })
   }
+
 
 
 

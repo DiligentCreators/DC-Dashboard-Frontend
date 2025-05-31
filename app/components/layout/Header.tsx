@@ -21,12 +21,10 @@
       MenubarContent,
       MenubarItem,
       MenubarMenu,
-      MenubarSeparator,
-      MenubarShortcut,
       MenubarTrigger,
       } from "@/components/ui/menubar";
       import { Bell } from "lucide-react";
-
+      import { useAuth } from '@/app/hook/auth'
       const Header = () => {
       const [theme, setTheme] = useState("system");
 
@@ -63,8 +61,10 @@
       setTheme(value);
       applyTheme(value);
       };
+        const { logout } = useAuth({ middleware: 'auth' })
 
-      return (
+
+        return (
         <header className="p-4 shadow-sm bg-white dark:bg-gray-900 border-b flex justify-between">
           <div>
             <h1 className="text-xl font-semibold md:ml-0 ml-8">Dashboard</h1>
@@ -96,7 +96,7 @@
                   <MenubarItem>Profile</MenubarItem>
                   <MenubarItem>Billing</MenubarItem>
                   <MenubarItem>Settings</MenubarItem>
-                  <MenubarItem>logout</MenubarItem>
+                  <MenubarItem onClick={logout}>Logout</MenubarItem>
                 </MenubarContent>
               </MenubarMenu>
             </Menubar>

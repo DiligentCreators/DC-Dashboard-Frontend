@@ -1,9 +1,9 @@
-
 // lib/api.ts
 import axios from 'axios'
 
 const API = axios.create({
-  baseURL: 'http://localhost:8000/api', // update this to your Laravel base URL
+  baseURL: 'http://localhost:8000', // your Laravel base URL
+  withCredentials: true,             // <---- add this line
 })
 
 // Add token to headers if available
