@@ -1,12 +1,13 @@
 // types/UserType.ts
 
 export interface UserType {
-  id: number
+  id?: number
   name: string
   email: string
   password: string
-  role: string
-  status: string
-  createdAt: string
-  updatedAt?: string
+  password_confirmation?: string
+  // role: string
+  // status: string
+  // createdAt: string
+  // updatedAt?: string
 }

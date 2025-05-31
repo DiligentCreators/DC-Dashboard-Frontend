@@ -58,7 +58,7 @@ function TableComm() {
   };
   return (
     <>
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-md border border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-md border border-gray-500">
       <Table>
         <TableCaption className="text-sm text-gray-500 dark:text-gray-400 mb-4">
           A list of registered users.

@@ -4,10 +4,9 @@ import React, { useState } from 'react'
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription
+  CardDescription, CardFooter
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Input from '@/app/components/shared/Input'
@@ -16,20 +15,26 @@ import { UserType } from '@/app/types/UserType'
 import { useAuthStore } from '@/app/store/useUserStore'
 import FieldError from '@/app/components/Validation/FieldError'
 import Link from 'next/link'
-const LoginComm = () => {
+const RegisterComm = () => {
 
-const auth = useAuthStore()
+  const auth = useAuthStore()
+
   // state
   const [credentials, setCredentials] =
-    useState<Pick<UserType, 'email' | 'password'>>({email: '', password: ''
-    })
+    useState<UserType>(
+      {
+        name: '',
+        email: '',
+        password: '',
+        password_confirmation: ''
+
+      })
 
   // handle formSubmit
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    await auth.login(credentials)
+    await auth.register(credentials)
   }
-  const { user } = useAuthStore()
 
 
 
@@ -41,33 +46,47 @@ const auth = useAuthStore()
 
   return (
     <FormLayout>
-      {user?.name}
       <Card className={cardStyle}>
         <CardHeader className={cardHeaderStyle}>
           <CardTitle className={CardTitleStyle}>
-            Welcome Back
+            Welcome
           </CardTitle>
           <CardDescription className={CardDescriptionStyle}>
-            Please sign in to your account
+            Please Signup in to your account
           </CardDescription>
         </CardHeader>
 
         <CardContent className="px-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <Input
+              id="name"
+              name="name"
+              label="Name"
+              type="text"
+              placeholder="jone deow"
+              value={credentials.name}
+              onChange={e =>
+                setCredentials({ ...credentials, name: e.target.value })
+              }
+
+            />
+            <FieldError field="name"  />
+
+            <Input
               id="email"
               name="email"
               label="Email"
               type="email"
               placeholder="example@gmail.com"
-
               value={credentials.email}
               onChange={e =>
                 setCredentials({ ...credentials, email: e.target.value })
               }
 
+
             />
-            <FieldError field='email'/>
+            <FieldError field="email"  />
+
 
             <Input
               id="password"
@@ -75,28 +94,38 @@ const auth = useAuthStore()
               label="Password"
               type="password"
               placeholder="********"
-
               value={credentials.password}
               onChange={e =>
                 setCredentials({ ...credentials, password: e.target.value })
               }
 
             />
-            <FieldError field='password'/>
+            <FieldError field="password"  />
 
+            <Input
+              id="password_confirmation"
+              name="password_confirmation"
+              label="Re-Type Password"
+              type="password"
+              placeholder="********"
+              value={credentials.password_confirmation}
+              onChange={e =>
+                setCredentials({ ...credentials, password_confirmation: e.target.value })
+              }
+
+            />
 
             <Button type="submit" className="w-full my-4">
-              Sign In
+              Sign Up
             </Button>
           </form>
 
           <CardFooter className="text-sm text-center w-full justify-center">
-            Don’t have an account?&nbsp;
-            <Link href="/signup" className="text-blue-600 hover:underline font-medium">
-              Sign up
+            Already have an account?&nbsp;
+            <Link href="/" className="text-blue-600 hover:underline font-medium">
+              Log in
             </Link>
           </CardFooter>
-
 
         </CardContent>
       </Card>
@@ -105,4 +134,4 @@ const auth = useAuthStore()
   )
 }
 
-export default LoginComm
+export default RegisterComm
