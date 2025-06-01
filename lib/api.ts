@@ -2,13 +2,14 @@
 import axios from 'axios'
 
 const API = axios.create({
-  baseURL: 'http://localhost:8000', // your Laravel base URL
-  withCredentials: true,             // <---- add this line
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+  withCredentials: true
 })
 
 // Add token to headers if available
 API.interceptors.request.use(config => {
-  const token = localStorage.getItem('token')
+  const token =
+    typeof window !== 'undefined' ? localStorage.getItem('token') : null
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
