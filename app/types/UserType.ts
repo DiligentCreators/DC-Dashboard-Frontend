@@ -6,8 +6,9 @@ export interface UserType {
   email: string
   password: string
   password_confirmation?: string
-  // role: string
-  // status: string
-  // createdAt: string
-  // updatedAt?: string
+  role?: string
+  is_active?: boolean
+  createdAt?: string
+  updatedAt?: string
+  is_suspended?: boolean
 }

@@ -1,8 +1,12 @@
+'use client'
 import DashboardLayout from "../components/layout/DashboardLayout";
 import TableComm from '@/app/components/tables/TableComm'
 import { Button } from '@/components/ui/button'
 import { PlusCircle } from 'lucide-react'
+import { useAuthRedirect } from '@/hooks/useAuthRedirect'
 const page = () => {
+  const { user, loading } = useAuthRedirect();
+  if (loading || !user) return <div>Loading...</div>;
   return (
     <div>
       <DashboardLayout>

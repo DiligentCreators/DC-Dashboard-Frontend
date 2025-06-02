@@ -1,17 +1,17 @@
-// stores/authStore.ts
 import { create } from 'zustand'
-import { registerUser, loginUser, fetchUser } from '@/app/services/authService'
-import { LoginFormType, RegisterFormType } from '@/app/types/AuthFormTypes'
+import { registerUser, loginUser, fetchUser, logoutUser } from '@/app/services/authService'
+import { RegisterPayload, LoginPayload } from '@/app/services/authService'
 import { UserType } from '@/app/types/UserType'
 import { useCommonStore } from './commonStore'
+import Cookies from 'js-cookie'
 
 type AuthStore = {
   user: UserType | null
   loading: boolean
   error: string | null
-  register: (form: RegisterFormType) => Promise<void>
-  login: (form: LoginFormType) => Promise<void>
-  logout: () => void
+  register: (form: RegisterPayload) => Promise<void>
+  login: (form: LoginPayload) => Promise<void>
+  logout: () => Promise<void>
   loadUser: () => Promise<void>
 }
 
@@ -20,48 +20,46 @@ export const useAuthStore = create<AuthStore>((set) => ({
   loading: false,
   error: null,
 
-
   register: async (form) => {
     const { setValidationErrors, clearValidationErrors } = useCommonStore.getState()
     try {
       set({ loading: true, error: null })
       clearValidationErrors()
 
-      const data = await registerUser(form)
-      localStorage.setItem('token', data.token)
-      set({ user: data.user })
-   } catch (err: any) {
-  const validation = err?.response?.data?.errors
-  if (validation) {
-    const flatErrors = Object.values(validation).flat().filter(e => typeof e === 'string') as string[]
-    setValidationErrors(flatErrors)
-  } else {
-    set({ error: err.response?.data?.message || 'Registration failed' })
-  }
-}
+       await registerUser(form)
 
-},
+    } catch (err: any) {
+      const validation = err?.response?.data?.errors
+      if (validation) {
+        const flatErrors = Object.values(validation).flat().filter(e => typeof e === 'string') as string[]
+        setValidationErrors(flatErrors)
+      } else {
+        set({ error: err?.response?.data?.message || 'Registration failed' })
+      }
+    } finally {
+      set({ loading: false })
+    }
+  },
+
   login: async (form) => {
     const { setValidationErrors, clearValidationErrors } = useCommonStore.getState()
     try {
       set({ loading: true, error: null })
       clearValidationErrors()
 
-      const data = await loginUser(form)
+      const { user, access_token } = await loginUser(form)
+      localStorage.setItem('token', access_token)
+      // Cookies.set('token', access_token, { expires: 7 })
+      window.location.pathname = '/dashboard'
 
-      // Save token and user info
-      localStorage.setItem('token', data.token)
-      set({ user: data.user })
+      set({ user })
     } catch (err: any) {
       const validation = err?.response?.data?.errors
       if (validation) {
-        // Laravel-style validation errors
         const flatErrors = Object.values(validation).flat().filter(e => typeof e === 'string') as string[]
         setValidationErrors(flatErrors)
       } else {
-        // General error like invalid credentials
-        const message = err?.response?.data?.message || 'Login failed'
-        set({ error: message })
+        set({ error: err?.response?.data?.message || 'Login failed' })
       }
     } finally {
       set({ loading: false })
@@ -70,13 +68,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
   loadUser: async () => {
     try {
-      const token = localStorage.getItem('token')
-      if (!token) {
-        set({ user: null, error: null })
-        return
-      }
-
-      set({ loading: true, error: null })
+      set({ loading: true })
       const user = await fetchUser()
       set({ user, error: null })
     } catch {
@@ -86,10 +78,15 @@ export const useAuthStore = create<AuthStore>((set) => ({
     }
   },
 
-  logout: () => {
+  logout: async () => {
+    try {
+      await logoutUser()
+    } catch {}
+
     localStorage.removeItem('token')
     set({ user: null, error: null, loading: false })
-  },
+    window.location.pathname = '/'
+  }
 
-
-}))
+}
+))

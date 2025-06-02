@@ -12,24 +12,28 @@ import {
 import { Button } from '@/components/ui/button'
 import Input from '@/app/components/shared/Input'
 import FormLayout from '@/app/components/layout/Form/FormLayout'
-import { UserType } from '@/app/types/UserType'
-// import { useAuthStore } from '@/app/store/useUserStore'
+// import { UserType } from '@/app/types/UserType'
+import { useAuthStore } from '@/app/store/useUserStore'
 import FieldError from '@/app/components/Validation/FieldError'
-import { useAuth } from '@/app/hook/auth'
+// import { useAuth } from '@/app/hook/auth'
+import { LoginPayload } from '@/app/services/authService'
 import Link from 'next/link'
+
 const LoginComm = () => {
 
-  const [errors, setErrors] = useState<any>({})
-  const [status, setStatus] = useState<string | null>(null)
-
-  const { login } = useAuth({
-    middleware: 'guest',
-    redirectIfAuthenticated: '/dashboard',
-  })
+  //
+  // const { login } = useAuth({
+  //   middleware: 'guest',
+  //   redirectIfAuthenticated: '/dashboard',
+  // })
   // state
+const login = useAuthStore(state => state.login)
   const [credentials, setCredentials] =
-    useState<Pick<UserType, 'email' | 'password'>>({email: '', password: ''
-    })
+    useState<LoginPayload>(
+        {
+          email: '',
+          password: ''
+      })
 
   // handle formSubmit
   // const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -39,11 +43,7 @@ const LoginComm = () => {
   // const { user } = useAuthStore()
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-   await login({
-      ...credentials,
-      setErrors,
-      setStatus,
-    })
+   await login(credentials)
   }
 
 

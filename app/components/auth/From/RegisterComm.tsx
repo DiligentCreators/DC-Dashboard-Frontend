@@ -11,46 +11,35 @@ import {
 import { Button } from '@/components/ui/button'
 import Input from '@/app/components/shared/Input'
 import FormLayout from '@/app/components/layout/Form/FormLayout'
-import { UserType } from '@/app/types/UserType'
-// import { useAuthStore } from '@/app/store/useUserStore'
+// import { UserType } from '@/app/types/UserType'
+import { useAuthStore } from '@/app/store/useUserStore'
 import FieldError from '@/app/components/Validation/FieldError'
 import Link from 'next/link'
-import { useAuth } from '@/app/hook/auth'
+import { RegisterPayload } from '@/app/services/authService'
 
 
 const RegisterComm = () => {
-  const { register } = useAuth({
-    middleware: 'guest',
-    redirectIfAuthenticated: '/dashboard',
-  })
+
+  const register = useAuthStore(state => state.register)
 
   // state
   const [credentials, setCredentials] =
-    useState<UserType>(
+    useState<RegisterPayload>(
       {
         name: '',
+        username: '',
         email: '',
         password: '',
         password_confirmation: ''
 
       })
 
-  const [errors, setErrors] = useState<any>({})
-
-  // handle formSubmit
-  // const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  //   e.preventDefault()
-  //   register(credentials)
-  //   // await auth.register(credentials)
-  // }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    register({
-      ...credentials,
-      setErrors,
-    })
-  }
+    e.preventDefault();
+    console.log("Form submitted with:", credentials);
+    await register(credentials);
+  };
 
 
 
@@ -76,18 +65,32 @@ const RegisterComm = () => {
         <CardContent className="px-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <Input
-              id="name"
-              name="name"
-              label="Name"
+              id="username"
+              name="username"
+              label="username"
               type="text"
-              placeholder="jone deow"
-              value={credentials.name}
+              placeholder="user124"
+              value={credentials.username}
               onChange={e =>
-                setCredentials({ ...credentials, name: e.target.value })
+                setCredentials({ ...credentials, username: e.target.value })
               }
 
             />
+            <FieldError field="username"  />
+            <Input
+                id="name"
+                name="name"
+                label="Name"
+                type="text"
+                placeholder="jone deow"
+                value={credentials.name}
+                onChange={e =>
+                    setCredentials({ ...credentials, name: e.target.value })
+                }
+
+            />
             <FieldError field="name"  />
+
 
             <Input
               id="email"
@@ -135,6 +138,7 @@ const RegisterComm = () => {
             <Button type="submit" className="w-full my-4">
               Sign Up
             </Button>
+
           </form>
 
           <CardFooter className="text-sm text-center w-full justify-center">

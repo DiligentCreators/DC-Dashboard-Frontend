@@ -1,14 +1,16 @@
-// services/authService.ts
-
 import API from '@/lib/api'
 import { UserType } from '@/app/types/UserType'
 
-// Register payload and response types
+// Payload types
 export type RegisterPayload = {
   name: string
+  username: string
   email: string
   password: string
-  password_confirmation: string
+  password_confirmation?: string
+  is_admin?: boolean,
+  is_active?: boolean,
+
 }
 
 export type LoginPayload = {
@@ -17,28 +19,44 @@ export type LoginPayload = {
 }
 
 export type AuthResponse = {
+  access_token: string
+  token_type: string
   user: UserType
-  token: string
+}
+
+// Get CSRF cookie before making state-changing requests
+const getCsrfCookie = async () => {
+  await API.get('/sanctum/csrf-cookie')
 }
 
 // Register API
-export const registerUser = async (
-  form: RegisterPayload
-): Promise<AuthResponse> => {
-  const res = await API.post<AuthResponse>('/register', form)
-  return res.data.data
+export const registerUser = async (form: RegisterPayload): Promise<AuthResponse> => {
+  await getCsrfCookie()
+  const res = await API.post('/api/auth/register', form)
+  return res.data.data // Assuming API responds with { data: { access_token, token_type, user } }
 }
 
 // Login API
-export const loginUser = async (
-  form: LoginPayload
-): Promise<AuthResponse> => {
-  const res = await API.post<AuthResponse>('/login', form)
+export const loginUser = async (form: LoginPayload): Promise<AuthResponse> => {
+  await getCsrfCookie()
+  const res = await API.post('/api/auth/login', form)
   return res.data.data
 }
 
-// Fetch user from token
+// Fetch user from token/session
 export const fetchUser = async (): Promise<UserType> => {
-  const res = await API.get<UserType>('/user')
-  return res.data.data
+  const res = await API.get('/api/user')
+  return res.data
+}
+
+// Logout API
+export const logoutUser = async (): Promise<void> => {
+  await getCsrfCookie()
+  await API.post('/api/auth/logout')
+}
+// Register API
+export const adminRegisterUser = async (form: RegisterPayload): Promise<AuthResponse> => {
+  await getCsrfCookie()
+  const res = await API.post('/api/admin/users', form)
+  return res.data.data // Assuming API responds with { data: { access_token, token_type, user } }
 }

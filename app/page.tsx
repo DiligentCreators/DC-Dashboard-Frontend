@@ -1,17 +1,14 @@
+'use client'
 
+import LoginComm from '@/app/components/auth/From/LoginComm';
+import { useGuestRedirect } from '@/hooks/useGuestRedirect';
 
-import LoginComm from '@/app/components/auth/From/LoginComm'
 const Login = () => {
+  const { loading } = useGuestRedirect();
 
+  if (loading) return <div>Loading...</div>;
 
+  return <LoginComm />;
+};
 
-  return (
-
-   <>
-
-     <LoginComm/>
-   </>
-  )
-}
-
-export default Login
+export default Login;
