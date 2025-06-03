@@ -7,8 +7,9 @@ export interface UserType {
   password: string
   password_confirmation?: string
   role?: string
-  is_active?: boolean
+  is_active?: boolean | number
   createdAt?: string
   updatedAt?: string
   is_suspended?: boolean
+  username?: string
 }

@@ -14,17 +14,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-
-const AddUserForm = () => {
+type AddUserFormProps = {
+  onSuccess: () => void;
+};
+const AddUserForm = ({ onSuccess }: AddUserFormProps) => {
 const { AdminRegister, loading } = useUserStore()
 
   const [credentials, setCredentials] = useState<RegisterPayload>({
     name: '',
     username: '',
-    is_active: true,
+    is_active: null,
     email: '',
     password: '',
-      password_confirmation: ''
+    password_confirmation: ''
   })
 
   // Handle input changes for text inputs
@@ -45,17 +47,19 @@ const { AdminRegister, loading } = useUserStore()
         password_confirmation: credentials.password,
       }
 
-      await AdminRegister(submitData)
+      const isSuccess = await AdminRegister(submitData)
 
-      // Reset form after successful submission
-      setCredentials({
-        name: '',
-        username: '',
-        is_active: true,
-        email: '',
-        password: '',
-        password_confirmation: '',
-      })
+      if (isSuccess) {
+        setCredentials({
+          name: '',
+          username: '',
+          is_active: 1,
+          email: '',
+          password: '',
+          password_confirmation: '',
+        })
+        onSuccess() // <- this will close the dialog
+      }
     } catch (err) {
       console.error('Registration failed:', err)
     }

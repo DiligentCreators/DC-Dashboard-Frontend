@@ -8,8 +8,8 @@ export type RegisterPayload = {
   email: string
   password: string
   password_confirmation?: string
-  is_admin?: boolean,
-  is_active?: boolean,
+  is_admin?: boolean | number | null,
+  is_active?: boolean | number | null,
 
 }
 
