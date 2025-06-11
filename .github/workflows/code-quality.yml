@@ -46,6 +46,8 @@ jobs:
 
       - name: Run Prettier check
         run: npx prettier . --check
+        # Or use --write instead if you want to auto-fix
+        # run: npx prettier . --write
 
   typecheck:
     name: Type Check (TypeScript)

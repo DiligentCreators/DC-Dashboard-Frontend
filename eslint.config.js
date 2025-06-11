@@ -1,6 +1,5 @@
 import js from "@eslint/js";
 import nuxt from "eslint-plugin-nuxt";
-import prettier from "eslint-config-prettier";
 
 export default [
   {
@@ -20,9 +19,23 @@ export default [
       },
     },
     rules: {
+      // Style rules Prettier handles — disabled here to avoid conflicts
+      "arrow-body-style": "off",
+      "prefer-arrow-callback": "off",
+      "max-len": "off",
+      "no-mixed-operators": "off",
+      "comma-dangle": "off",
+      "function-paren-newline": "off",
+      "implicit-arrow-linebreak": "off",
+      "object-curly-newline": "off",
+      "operator-linebreak": "off",
+      "quote-props": "off",
+      "wrap-iife": "off",
+      "no-tabs": "off",
+
+      // Your preferred rules
       quotes: ["error", "single"],
       semi: ["error", "always"],
     },
   },
-  prettier, // ⬅️ Add this last to disable formatting conflicts
 ];
