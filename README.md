@@ -1,22 +1,75 @@
-## DC Dashboard Backend
+# Nuxt Minimal Starter
 
-![Code Quality Checks](https://github.com/DiligentCreators/DC-Dashboard-Frontend/actions/workflows/code-quality.yml/badge.svg)
+Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
-## Installation Steps
+## Setup
 
-First clone the repository using the following command
-
-```bash
-git clone https://github.com/DiligentCreators/DC-Dashboard-Frontend.git
-```
-
-Install/Update the dependencies using npm or yarn. For npm use the following command. For yarn use the command 
+Make sure to install dependencies:
 
 ```bash
+# npm
 npm install
+
+# pnpm
+pnpm install
+
+# yarn
+yarn install
+
+# bun
+bun install
 ```
 
-Update `NEXT_PUBLIC_API_BASE_URL` in .env file with the API base URL.
+## Development Server
+
+Start the development server on `http://localhost:3000`:
+
 ```bash
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api
+# npm
+npm run dev
+
+# pnpm
+pnpm dev
+
+# yarn
+yarn dev
+
+# bun
+bun run dev
 ```
+
+## Production
+
+Build the application for production:
+
+```bash
+# npm
+npm run build
+
+# pnpm
+pnpm build
+
+# yarn
+yarn build
+
+# bun
+bun run build
+```
+
+Locally preview production build:
+
+```bash
+# npm
+npm run preview
+
+# pnpm
+pnpm preview
+
+# yarn
+yarn preview
+
+# bun
+bun run preview
+```
+
+Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
