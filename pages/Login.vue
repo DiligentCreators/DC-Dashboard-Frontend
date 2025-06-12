@@ -54,9 +54,13 @@ const form = reactive({
 
 const handleLogin = async () => {
   loading.value = true;
-  await auth.attemptLogin(form);
-  loading.value = false;
-
+  try {
+    await auth.attemptLogin(form);
+  } catch (error) {
+    console.error(error); // Optional: show error to user
+  } finally {
+    loading.value = false;
+  }
 };
 
 definePageMeta({

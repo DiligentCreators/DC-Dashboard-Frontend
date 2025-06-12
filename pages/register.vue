@@ -72,7 +72,6 @@ const form = reactive({
   c_password: "",
 });
 
-
 const handleRegister = async () => {
   const data = {
     name: form.name,
@@ -83,16 +82,21 @@ const handleRegister = async () => {
   };
 
   loading.value = true;
-  const isSuccess = await auth.attemptRegister(data);
-  loading.value = false;
-  if (isSuccess) {
-    form.name = '';
-    form.email = '';
-    form.password = '';
-    form.c_password = '';
+  try {
+    const isSuccess = await auth.attemptRegister(data);
+    if (isSuccess) {
+      form.name = '';
+      form.email = '';
+      form.password = '';
+      form.c_password = '';
+    }
+  } catch (error) {
+    console.error(error); // Optional: show error to user
+  } finally {
+    loading.value = false;
   }
-
 };
+
 definePageMeta({
   middleware: ["guest"],
 });
