@@ -10,16 +10,15 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <!-- First Name -->
           <div>
-            <Input v-model="form.first_name" type="text" required label="Role Name" />
+            <Input v-model="form.name" type="text" required label="Role Name" />
           </div>
 
 
         </div>
 
-        <!-- Submit Button -->
-        <UButton color="neutral" size="md" class="mt-6" type="submit">
-          Create Role
-        </UButton>
+        <PrimaryButton type="submit" :disabled="loading" :loading="loading" class="mt-5">
+          create role
+        </PrimaryButton>
       </form>
     </div>
   </MainLayout>
@@ -29,44 +28,31 @@
 import MainLayout from "~/layouts/Dashboard/MainLayout.vue";
 import Input from "~/components/Common/Input.vue";
 import Breadcrumb from "~/components/dashboard/Breadcrumb.vue";
+import {useRoleStore} from "~/stores/role.js";
+import PrimaryButton from "~/components/Common/PrimaryButton.vue";
 
-const toast = useToast();
 
-// All values must be valid, no empty strings
-const loginStatusOptions = [
-  { label: "User Can Login", value: "active" },
-  { label: "Cannot Login", value: "inactive" },
-];
+const roleStore = useRoleStore()
+const loading = ref(false);
 
-const verifyEmailOptions = [
-  { label: "Email Verification Required", value: true },
-  { label: "Email Verification Not Required", value: false },
-];
-const Roles = [
-  { label: "Admin", value: 'admin' },
-  { label: "Client", value: 'client' },
-  { label: "Developer", value: 'developer' },
-
-];
 
 const form = reactive({
-  first_name: "",
-  last_name: "",
-  email: "",
-  password: "",
-  login_status: null,
-  verify_email: null,
-  role: ''
+  name: ''
 });
 
 const createClient = async () => {
-  console.log(form)
-  toast.add({
-    title: `created successfully!`,
-    color: 'success',
-    icon: 'i-lucide-check-circle'
-  });
+  loading.value = true
+  try {
+    const isSuccess = await roleStore.createRole(form);
+    if (isSuccess) {
+      form.name = '';
+    }
+  } catch (error) {
+  } finally {
+    loading.value = false;
+  }
 };
+
 const breadcrumbItems = [
   { label: 'Dashboard', to: '/dashboard' },
   { label: 'Roles List', to: 'list' },

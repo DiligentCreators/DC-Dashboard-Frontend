@@ -20,7 +20,7 @@ defineProps({
       :type="type"
       :disabled="disabled || loading"
       :class="[
-      'inline-flex items-center gap-2 rounded-md border border-transparent bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out focus:bg-indigo-800 focus:outline-none active:bg-indigo-900',
+      'inline-flex items-center gap-2 rounded-md border border-transparent bg-gray-900 hover:bg-black px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out focus:bg-indigo-800 focus:outline-none active:bg-indigo-900',
       (disabled || loading) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
     ]"
   >

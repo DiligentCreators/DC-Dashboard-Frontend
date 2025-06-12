@@ -10,22 +10,28 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <!-- First Name -->
           <div>
-            <Input v-model="form.first_name" type="text" required label="First Name" />
+            <Input v-model="form.first_name" type="text"  label="First Name" />
+            <validation-error field="name" />
           </div>
 
           <!-- Last Name -->
           <div>
-            <Input v-model="form.last_name" type="text" required label="Last Name" />
+            <Input v-model="form.last_name" type="text"  label="Last Name" />
+
           </div>
 
           <!-- Email -->
           <div>
-            <Input v-model="form.email" type="email" required label="Email" />
+            <Input v-model="form.email" type="email"  label="Email" />
+            <validation-error field="email" />
+
           </div>
 
           <!-- Password -->
           <div>
-            <Input v-model="form.password" type="password" required label="Password" />
+            <Input v-model="form.password" type="password"  label="Password" />
+            <validation-error field="password" />
+
           </div>
 
           <!-- Login Status -->
@@ -55,10 +61,13 @@
           </div>
         </div>
 
-        <!-- Submit Button -->
-        <UButton color="neutral" size="md" class="mt-6" type="submit">
-          Create Client
-        </UButton>
+
+        <div class="mt-5">
+          <PrimaryButton type="submit" :disabled="loading" :loading="loading">
+            Create client
+          </PrimaryButton>
+        </div>
+
       </form>
     </div>
   </MainLayout>
@@ -69,6 +78,8 @@ import MainLayout from "~/layouts/Dashboard/MainLayout.vue";
 import Input from "~/components/Common/Input.vue";
 import Breadcrumb from "~/components/dashboard/Breadcrumb.vue";
 import {useClientStore} from "~/stores/client.js";
+import ValidationError from "~/components/Common/ValidationError.vue";
+import PrimaryButton from "~/components/Common/PrimaryButton.vue";
 
 const clientStore = useClientStore()
 // All values must be valid, no empty strings
@@ -93,15 +104,36 @@ const form = reactive({
   verify_email: "yes",
 });
 
-const createClient = async () => {
-  const submitData = {
-    ...form,
-    password_confirmation: form.password,
-    name: form.first_name, '==': form.last_name,
+const loading = ref(false);
 
+const createClient = async () => {
+  loading.value = true;
+  try {
+    const submitData = {
+      ...form,
+      password_confirmation: form.password,
+      name: `${form.first_name} ${form.last_name}`,
+    };
+
+   const isSuccess =  await clientStore.createClient(submitData);
+
+    if (isSuccess) {
+      form.name = '';
+      form.first_name = '';
+      form.email = '';
+      form.last_name = '';
+      form.password = '';
+    }
+
+  } catch (error) {
+    console.error('Create client error:', error);
+  } finally {
+    loading.value = false;
   }
-  await clientStore.createClient(submitData)
 };
+
+
+
 const breadcrumbItems = [
   { label: 'Dashboard', to: '/dashboard' },
   { label: 'Client List', to: '/admin/client' },

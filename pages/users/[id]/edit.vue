@@ -1,40 +1,28 @@
-<script setup lang="ts">
-import { ref } from 'vue';
-import MainLayout from "~/layouts/Dashboard/MainLayout.vue";
-import Input from "~/components/Common/Input.vue";
-import Breadcrumb from "~/components/dashboard/Breadcrumb.vue";
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { useToast } from '#imports'
+import Input from '~/components/Common/Input.vue'
+import Breadcrumb from '~/components/dashboard/Breadcrumb.vue'
+import MainLayout from '~/layouts/Dashboard/MainLayout.vue'
+const loading = ref(false)
 const breadcrumbItems = [
   { label: 'Dashboard', to: '/dashboard' },
-  // { label: 'Users List', to: 'list' },
-  { label: 'Users Edit', to: '/users/edit' },
-
-
+  { label: 'User List', to: '/admin/user' },
+  { label: 'User Edit', to: '/users/edit' }
 ]
-interface Client {
-  id: number;
-  username: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  gender: string | null;
-  dateOfBirth: string | null;
-  country: string;
-  state: string;
-  city: string;
-  zipCode: string;
-  emailVerified: boolean;
-  suspended: boolean;
-}
 
-const toast = useToast();
+const route = useRoute()
+const toast = useToast()
+const userStore = useUserStore()
+const id = route.params.id
 
-// Sample client data
-const client = ref<Client>({
-  id: 1,
-  username: 'kjhk_jhj',
-  email: 'email@email.com',
-  firstName: 'Kjhk',
-  lastName: 'Jhj',
+const form = ref({
+  name: '',
+  username: '',
+  email: '',
+  firstName: '',
+  lastName: '',
   gender: null,
   dateOfBirth: null,
   country: '',
@@ -42,56 +30,89 @@ const client = ref<Client>({
   city: '',
   zipCode: '',
   emailVerified: false,
-  suspended: false,
-});
+  suspended: false
+})
+onMounted(async () => {
+  try {
+    await userStore.getUser(id)
+    const clientData = userStore.selectedUser
 
-const activeTab = ref('profile');
+    const user = clientData.data
+    const profile = user.profile || {}
 
-// Tab change handler
-const setActiveTab = (tab: string) => {
-  activeTab.value = tab;
-};
+    form.value = {
+      username: user.username || '',
+      email: user.email || '',
+      firstName: user.name?.split(' ')[0] || '',
+      lastName: user.name?.split(' ')[1] || '',
+      gender: profile.gender || '',
+      dateOfBirth: profile.dob || '',
+      country: profile.country || '',
+      state: profile.state || '',
+      city: profile.city || '',
+      zipCode: profile.zipcode || '',
+      emailVerified: !!user.email_verified_at,
+      suspended: user.is_suspended || false
+    }
+  } catch (error) {
+    toast.add({ title: 'Failed to load client data', color: 'error' })
+    console.error('User fetch error:', error)
+  }
+})
 
-// Action handlers
-const loginAsClient = () => {
-  toast.add({
-    title: `Logged in as ${client.value.firstName} ${client.value.lastName}`,
-    color: 'success',
-    icon: 'i-lucide-user',
-  });
-};
+const activeTab = ref('profile')
+
+const setActiveTab = (tab) => {
+  activeTab.value = tab
+}
+
+const loginAsUser = () => {
+  toast.add({ title: `Logged in as ${form.value.username} (simulated)`, color: 'success' })
+}
 
 const markEmailAsVerified = () => {
-  client.value.emailVerified = true;
-  toast.add({
-    title: 'Email marked as verified',
-    color: 'success',
-    icon: 'i-lucide-check-circle',
-  });
+  form.value.emailVerified = true
+  toast.add({ title: 'Email marked as verified', color: 'success' })
+}
+
+const suspendUser = () => {
+  form.value.suspended = true
+  toast.add({ title: 'User suspended', color: 'error' })
+}
+const saveChanges = async () => {
+  try {
+    const submitData = {
+      username: form.value.username,
+      email: form.value.email,
+      name: `${form.value.firstName} ${form.value.lastName}`,
+      email_verified_at: form.value.emailVerified ? new Date().toISOString() : null,
+      is_suspended: form.value.suspended,
+
+      // Profile data should be nested if your API expects it
+      profile: {
+        gender: form.value.gender,
+        dob: form.value.dateOfBirth,
+        country: form.value.country,
+        state: form.value.state,
+        city: form.value.city,
+        zipcode: form.value.zipCode,
+      }
+    };
+
+    await userStore.updateUser(id, submitData);
+
+    console.log(submitData)
+  } catch (error) {
+    console.error('Failed to update client:', error);
+  }
 };
 
-const suspendClient = () => {
-  client.value.suspended = true;
-  toast.add({
-    title: `${client.value.firstName} ${client.value.lastName} has been suspended`,
-    color: 'error',
-    icon: 'i-lucide-user-x',
-  });
-};
 
-// Form submission handler
-const saveChanges = () => {
-  toast.add({
-    title: 'Client details updated successfully',
-    color: 'success',
-    icon: 'i-lucide-save',
-  });
-};
 const options = ref([
-{ value: null, label: 'N/A' },
-{ value: 'male', label: 'Male' },
-{ value: 'female', label: 'Female' },
-{ value: 'other', label: 'Other' },
+  { value: null, label: 'N/A' },
+  { value: 'male', label: 'Male' },
+  { value: 'female', label: 'Female' },
+  { value: 'other', label: 'Other' }
 ])
 </script>
 
@@ -99,11 +120,20 @@ const options = ref([
   <MainLayout>
     <Breadcrumb :items="breadcrumbItems" />
 
-      <div >
+    <div>
+      <!-- Loading State -->
+      <div v-if="loading" class="text-center py-12">
+        <div class="text-4xl mb-4">⏳</div>
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Loading client data...</h3>
+      </div>
+
+
+      <!-- User Data -->
+      <div v-else>
         <!-- Header -->
         <div class="mb-6">
           <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-            Users Profile
+            User Profile
           </h1>
         </div>
 
@@ -112,17 +142,17 @@ const options = ref([
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
               <UAvatar
-                  :src="`https://i.pravatar.cc/120?img=${client.id}`"
+                  :src="`https://i.pravatar.cc/120?img=${form.id}`"
                   size="lg"
-                  :alt="`${client.firstName} ${client.lastName} avatar`"
+                  :alt="`${form.firstName} ${form.lastName} avatar`"
                   class="border-2 border-gray-200 dark:border-gray-600"
               />
               <div>
                 <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-                  {{ client.firstName }} {{ client.lastName }}
+                  {{ form.firstName || 'N/A' }} {{ form.lastName || '' }}
                 </h2>
                 <p class="text-sm text-gray-500 dark:text-gray-400">
-                  Username: {{ client.username }}
+                  Username: {{ form.username || 'N/A' }}
                 </p>
               </div>
             </div>
@@ -131,17 +161,17 @@ const options = ref([
                   color="success"
                   variant="outline"
                   size="sm"
-                  @click="loginAsClient"
-                  :disabled="client.suspended"
+                  @click="loginAsUser"
+                  :disabled="form.suspended"
               >
-                Login As Client
+                Login As User
               </UButton>
               <UButton
                   color="success"
                   variant="outline"
                   size="sm"
                   @click="markEmailAsVerified"
-                  :disabled="client.emailVerified"
+                  :disabled="form.emailVerified"
               >
                 Mark Email As Verified
               </UButton>
@@ -149,10 +179,10 @@ const options = ref([
                   color="error"
                   variant="outline"
                   size="sm"
-                  @click="suspendClient"
-                  :disabled="client.suspended"
+                  @click="suspendUser"
+                  :disabled="form.suspended"
               >
-                Suspend Client
+                Suspend User
               </UButton>
             </div>
           </div>
@@ -165,11 +195,9 @@ const options = ref([
               <button
                   @click="setActiveTab('profile')"
                   class="px-6 py-3 text-sm font-medium"
-                  :class="
-                activeTab === 'profile'
+                  :class="activeTab === 'profile'
                   ? 'text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-              "
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
               >
                 <UIcon name="i-lucide-user" class="w-4 h-4 inline mr-1" />
                 Profile
@@ -177,11 +205,9 @@ const options = ref([
               <button
                   @click="setActiveTab('personal')"
                   class="px-6 py-3 text-sm font-medium"
-                  :class="
-                activeTab === 'personal'
+                  :class="activeTab === 'personal'
                   ? 'text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-              "
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
               >
                 <UIcon name="i-lucide-info" class="w-4 h-4 inline mr-1" />
                 Personal Details
@@ -189,26 +215,12 @@ const options = ref([
               <button
                   @click="setActiveTab('password')"
                   class="px-6 py-3 text-sm font-medium"
-                  :class="
-                activeTab === 'password'
+                  :class="activeTab === 'password'
                   ? 'text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-              "
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
               >
                 <UIcon name="i-lucide-lock" class="w-4 h-4 inline mr-1" />
                 Change Password
-              </button>
-              <button
-                  @click="setActiveTab('role')"
-                  class="px-6 py-3 text-sm font-medium"
-                  :class="
-                activeTab === 'role'
-                  ? 'text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-              "
-              >
-                <UIcon name="i-lucide-lock" class="w-4 h-4 inline mr-1" />
-               manage roles
               </button>
             </nav>
           </div>
@@ -220,7 +232,7 @@ const options = ref([
               <div class="flex items-center gap-3 mb-6">
                 <UIcon name="i-lucide-mail" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
                 <p class="text-sm text-gray-900 dark:text-gray-100">
-                  {{ client.email }}
+                  {{ form.email || 'N/A' }}
                 </p>
               </div>
               <div class="flex gap-3">
@@ -228,17 +240,17 @@ const options = ref([
                     color="success"
                     variant="outline"
                     size="md"
-                    @click="loginAsClient"
-                    :disabled="client.suspended"
+                    @click="loginAsUser"
+                    :disabled="form.suspended"
                 >
-                  Login As Client
+                  Login As User
                 </UButton>
                 <UButton
                     color="success"
                     variant="outline"
                     size="md"
                     @click="markEmailAsVerified"
-                    :disabled="client.emailVerified"
+                    :disabled="form.emailVerified"
                 >
                   Mark Email As Verified
                 </UButton>
@@ -246,10 +258,10 @@ const options = ref([
                     color="error"
                     variant="outline"
                     size="md"
-                    @click="suspendClient"
-                    :disabled="client.suspended"
+                    @click="suspendUser"
+                    :disabled="form.suspended"
                 >
-                  Suspend Client
+                  Suspend User
                 </UButton>
               </div>
             </div>
@@ -264,37 +276,34 @@ const options = ref([
                   </h3>
                   <div class="space-y-4">
                     <div>
-
                       <Input
-                          v-model="client.firstName"
+                          v-model="form.firstName"
                           placeholder="First Name"
                           size="md"
                           class="w-full"
                       />
                     </div>
                     <div>
-
                       <Input
-                          v-model="client.lastName"
+                          v-model="form.lastName"
                           placeholder="Last Name"
                           size="md"
                           class="w-full"
                       />
                     </div>
                     <div>
-
-
-                      <select v-model="client.gender" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                        <option value="">Filter Active/Inactive</option>
-                        <option value=""  v-for="option in options">{{option.label}}</option>
-
-
+                      <select
+                          v-model="form.gender"
+                          class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      >
+                        <option v-for="option in options" :key="option.value" :value="option.value">
+                          {{ option.label }}
+                        </option>
                       </select>
                     </div>
                     <div>
-
                       <Input
-                          v-model="client.dateOfBirth"
+                          v-model="form.dateOfBirth"
                           type="date"
                           size="md"
                           class="w-full"
@@ -310,36 +319,32 @@ const options = ref([
                   </h3>
                   <div class="space-y-4">
                     <div>
-
                       <Input
-                          v-model="client.country"
+                          v-model="form.country"
                           placeholder="Country"
                           size="md"
                           class="w-full"
                       />
                     </div>
                     <div>
-
                       <Input
-                          v-model="client.state"
+                          v-model="form.state"
                           placeholder="State"
                           size="md"
                           class="w-full"
                       />
                     </div>
                     <div>
-
                       <Input
-                          v-model="client.city"
+                          v-model="form.city"
                           placeholder="City"
                           size="md"
                           class="w-full"
                       />
                     </div>
                     <div>
-
                       <Input
-                          v-model="client.zipCode"
+                          v-model="form.zipCode"
                           placeholder="Zip Code"
                           size="md"
                           class="w-full"
@@ -362,23 +367,9 @@ const options = ref([
             <!-- Change Password Tab -->
             <div v-if="activeTab === 'password'">
               <div class="space-y-4 max-w-md">
+
                 <div>
-                  <label
-                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                  >
-                    Current Password
-                  </label>
-                  <Input
-                      type="password"
-                      placeholder="Current Password"
-                      size="md"
-                      class="w-full"
-                  />
-                </div>
-                <div>
-                  <label
-                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                  >
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     New Password
                   </label>
                   <Input
@@ -388,19 +379,7 @@ const options = ref([
                       class="w-full"
                   />
                 </div>
-                <div>
-                  <label
-                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                  >
-                    Confirm New Password
-                  </label>
-                  <Input
-                      type="password"
-                      placeholder="Confirm New Password"
-                      size="md"
-                      class="w-full"
-                  />
-                </div>
+
                 <div class="mt-4">
                   <UButton
                       color="neutral"
@@ -412,46 +391,10 @@ const options = ref([
                 </div>
               </div>
             </div>
-            <div v-if="activeTab === 'role'">
-              <div class="space-y-4 max-w-md">
-                <div>
-                  <label
-                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                  >
-                    User's Role(s)
-                  </label>
-                  <div>
-
-
-                    <select v-model="client.gender" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                      <option value="">Filter Active/Inactive</option>
-                      <option value=""  v-for="option in options">{{option.label}}</option>
-
-
-                    </select>
-                  </div>
-                </div>
-                <div class="mt-4">
-                  <UButton
-
-                      color="neutral"
-                      size="md"
-                      @click="toast.add({ title: 'Password updated successfully', color: 'success', icon: 'i-lucide-lock' })"
-                  >
-                    Update Role(s)
-                  </UButton>
-                </div>
-              </div>
-            </div>
-
-
           </div>
-
-
-
         </div>
       </div>
-
+    </div>
   </MainLayout>
 </template>
 
