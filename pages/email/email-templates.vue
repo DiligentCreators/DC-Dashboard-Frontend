@@ -1,10 +1,11 @@
 <template>
 
   <MainLayout>
-    <RoleTable />
+<EmailTemplates />
   </MainLayout>
 </template>
-<script setup lang="ts">
-import RoleTable from "@/components/Role/RoleTable.vue"
+
+<script setup>
+import EmailTemplates from '@/components/Email/EmailTemplate.vue'
 import MainLayout from "~/layouts/Dashboard/MainLayout.vue";
 </script>

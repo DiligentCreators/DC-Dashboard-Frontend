@@ -60,6 +60,23 @@ onMounted(async () => {
     console.error('Client fetch error:', error)
   }
 })
+const passwordForm = reactive({
+  password: ''
+})
+
+
+async function handleUpdatePassword() {
+  try {
+    await clientStore.updateClientPassword(id, {
+      password: passwordForm.password,
+    });
+    toast.add({ title: 'Password updated successfully', color: 'success' });
+    passwordForm.password = '';
+  } catch (err) {
+    toast.add({ title: 'Failed to update password', color: 'error' });
+    console.error(err);
+  }
+}
 
 const activeTab = ref('profile')
 
@@ -368,12 +385,12 @@ const options = ref([
             <!-- Change Password Tab -->
             <div v-if="activeTab === 'password'">
               <div class="space-y-4 max-w-md">
-
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     New Password
                   </label>
                   <Input
+                      v-model="passwordForm.password"
                       type="password"
                       placeholder="New Password"
                       size="md"
@@ -385,7 +402,7 @@ const options = ref([
                   <UButton
                       color="neutral"
                       size="md"
-                      @click="toast.add({ title: 'Password updated successfully', color: 'success', icon: 'i-lucide-lock' })"
+                      @click="handleUpdatePassword"
                   >
                     Update Password
                   </UButton>

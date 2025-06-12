@@ -5,45 +5,45 @@ import { $api } from "~/composables/api";
 import { useCookie } from "#app";
 import {useCommonStore} from "~/stores/common.js";
 
-export const useClientStore = defineStore("client", () => {
-    const clients = ref([]);
-    const isClientLoading = ref(false);
-    const selectedClient = ref(null);
-    const errors = ref(null);
+export const useRoleStore = defineStore("client", () => {
+    const Roles = ref([]);
+    const isRoleLoading = ref(false);
+    const selectedRole = ref(null);
     const common = useCommonStore();
     const token = useCookie("auth_token");
 
-    // Fetch all clients
-    async function fetchClients() {
-        isClientLoading.value = true;
+    // Fetch all Roles
+    async function fetchRoles() {
+        isRoleLoading.value = true;
         try {
-            const data = await $api("/api/admin/users", {
+            const data = await $api("/api/admin/roles", {
                 headers: {
                     Authorization: `Bearer ${token.value}`,
                 },
             });
-            clients.value = data.data;
+            Roles.value = data.data;
         } catch (err) {
-            toast.error("Error loading clients.");
+            toast.error("Error loading Roles.");
         } finally {
-            isClientLoading.value = false;
+            isRoleLoading.value = false;
         }
     }
 
 
     // Create new client
-    async function createClient(clientData) {
-        errors.value = null;
+    async function createRole(clientData) {
+        common.validationError = null
+
         try {
-            await $api("/api/admin/users", {
+            await $api("/api/admin/roles", {
                 method: "post",
                 body: clientData,
                 headers: {
                     Authorization: `Bearer ${token.value}`,
                 },
             });
-            toast.success("Client created successfully");
-            await fetchClients();
+            toast.success("Role created successfully");
+            await fetchRoles();
             return true;
 
         } catch (err) {
@@ -56,37 +56,39 @@ export const useClientStore = defineStore("client", () => {
             return false;
 
         }
+
     }
 
     // Get a specific client
-    async function getClient(id) {
+    async function getRole(id) {
         try {
-            const { data, error } = await useApifetch(`/api/admin/users/${id}`, {
+            const { data, error } = await useApifetch(`/api/admin/roles/${id}`, {
                 headers: {
                     Authorization: `Bearer ${token.value}`,
                 },
             });
 
             if (error.value) throw new Error("Failed to get client");
-            selectedClient.value = data.value;
+            selectedRole.value = data.value;
         } catch (err) {
             toast.error("Could not fetch client details.");
         }
     }
 
     // Update a client
-    async function updateClient(id, updatedData) {
+    async function updateRole(id, updatedData) {
         common.validationError  = null;
         try {
-            await $api(`/api/admin/users/${id}`, {
+            await $api(`/api/admin/roles/${id}`, {
                 method: "put",
                 body: updatedData,
                 headers: {
                     Authorization: `Bearer ${token.value}`,
                 },
             });
-            toast.success("Client updated successfully");
-            await fetchClients();
+            toast.success("Role updated successfully");
+            await fetchRoles();
+
         } catch (err) {
             if (err.status === 422) {
                 common.validationError = err.data.errors;
@@ -97,18 +99,18 @@ export const useClientStore = defineStore("client", () => {
         }
     }
     // Update a client
-    async function updateClientPassword(id, updatedData) {
+    async function updateRolePassword(id, updatedData) {
         common.validationError  = null;
         try {
-            await $api(`/api/admin/users/${id}/update-password`, {
+            await $api(`/api/admin/roles/${id}/update-password`, {
                 method: "put",
                 body: updatedData,
                 headers: {
                     Authorization: `Bearer ${token.value}`,
                 },
             });
-            toast.success("Client password updated successfully");
-            await fetchClients();
+            toast.success("Role password updated successfully");
+            await fetchRoles();
         } catch (err) {
             if (err.status === 422) {
                 common.validationError  = err.data.errors;
@@ -120,44 +122,44 @@ export const useClientStore = defineStore("client", () => {
     }
 
     // Delete a client
-    async function deleteClient(id) {
+    async function deleteRole(id) {
         try {
-            await $api(`/api/admin/users/${id}`, {
+            await $api(`/api/admin/roles/${id}`, {
                 method: "delete",
                 headers: {
                     Authorization: `Bearer ${token.value}`,
                 },
             });
-            toast.success("Client deleted");
-            await fetchClients();
+            toast.success("Role deleted");
+            await fetchRoles();
         } catch (err) {
             toast.error("Failed to delete client.");
         }
     }
-    async function restoreClient(id) {
+    async function restoreRole(id) {
         try {
-            await $api(`/api/admin/users/${id}/restore`, {
+            await $api(`/api/admin/roles/${id}/restore`, {
                 method: "post",
                 headers: {
                     Authorization: `Bearer ${token.value}`,
                 },
             });
-            toast.success("Client restored");
-            await fetchClients();
+            toast.success("Role restored");
+            await fetchRoles();
         } catch (err) {
             toast.error("Failed to restore client.");
         }
     }
-    async function forceDeleteClient(id) {
+    async function forceDeleteRole(id) {
         try {
-            await $api(`/api/admin/users/${id}/force-delete`, {
+            await $api(`/api/admin/roles/${id}/force-delete`, {
                 method: "delete",
                 headers: {
                     Authorization: `Bearer ${token.value}`,
                 },
             });
-            toast.success("Client deleted");
-            await fetchClients();
+            toast.success("Role deleted");
+            await fetchRoles();
         } catch (err) {
             toast.error("Failed to delete client.");
         }
@@ -178,37 +180,21 @@ export const useClientStore = defineStore("client", () => {
         }
     }
 
-    async function toggleSuspendedStatus(id) {
-        try {
-            await $api(`/api/admin/${id}/toggle-suspended`, {
-                method: "patch",
-                headers: {
-                    Authorization: `Bearer ${token.value}`,
-                },
-            });
-            toast.success("Successfully toggled suspended status.");
-        } catch (err) {
-            toast.error("Failed to toggle suspended status.");
-            throw err;
-        }
-    }
 
 
 
     return {
         toggleActiveStatus,
-        toggleSuspendedStatus,
-        clients,
-        selectedClient,
-        isClientLoading,
-        errors,
-        fetchClients,
-        createClient,
-        getClient,
-        updateClient,
-        deleteClient,
-        restoreClient,
-        forceDeleteClient,
-        updateClientPassword,
+        Roles,
+        selectedRole,
+        isRoleLoading,
+        fetchRoles,
+        createRole,
+        getRole,
+        updateRole,
+        deleteRole,
+        restoreRole,
+        forceDeleteRole,
+        updateRolePassword,
     };
 });

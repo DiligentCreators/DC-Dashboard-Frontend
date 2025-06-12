@@ -142,6 +142,15 @@ const menu = [
       { label: 'Create User', to: '/users/create', icon: 'lucide:user-plus' },
       { label: 'Manage Roles', to: '/roles/list', icon: 'lucide:shield-check' }
     ]
+  },
+  {
+    label: 'Email & Setting',
+    icon: 'lucide:users-round',
+    children: [
+      { label: 'Email Templates', to: '/email/email-templates', icon: 'lucide:list' },
+      { label: 'Create New Email', to: '/email/create', icon: 'lucide:user-plus' },
+      { label: 'Global Header & Footer', to: '/roles/list', icon: 'lucide:shield-check' }
+    ]
   }
 ]
 

@@ -6,33 +6,39 @@
     <div class="p-6 bg-white dark:bg-gray-800 shadow-md rounded-xl mt-5">
       <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Create New User</h2>
 
-      <form @submit.prevent="createClient">
+      <form @submit.prevent="createUser">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <!-- First Name -->
           <div>
-            <Input v-model="form.first_name" type="text" required label="First Name" />
+            <Input v-model="form.first_name" type="text"  label="First Name" />
+            <validation-error field="name" />
           </div>
 
           <!-- Last Name -->
           <div>
-            <Input v-model="form.last_name" type="text" required label="Last Name" />
+            <Input v-model="form.last_name" type="text"  label="Last Name" />
+
           </div>
 
           <!-- Email -->
           <div>
-            <Input v-model="form.email" type="email" required label="Email" />
+            <Input v-model="form.email" type="email"  label="Email" />
+            <validation-error field="email" />
+
           </div>
 
           <!-- Password -->
           <div>
-            <Input v-model="form.password" type="password" required label="Password" />
+            <Input v-model="form.password" type="password"  label="Password" />
+            <validation-error field="password" />
+
           </div>
 
           <!-- Login Status -->
           <div>
             <label class="mb-1 text-[.82rem] font-medium text-gray-800 dark:text-gray-200">Login Status</label>
             <USelect
-                v-model="form.login_status"
+                v-model="form.is_active"
                 :items="loginStatusOptions"
                 placeholder="Select Login Status"
                 option-attribute="label"
@@ -53,23 +59,16 @@
                 class="w-full bg-white dark:bg-gray-700 py-3"
             />
           </div>
-          <div>
-            <label class="mb-1 text-[.82rem] font-medium text-gray-800 dark:text-gray-200">Verify Email</label>
-            <USelect
-                v-model="form.role"
-                :items="Roles"
-                placeholder="Select Email Verification"
-                option-attribute="label"
-                value-attribute="value"
-                class="w-full bg-white dark:bg-gray-700 py-3"
-            />
-          </div>
         </div>
 
-        <!-- Submit Button -->
-        <UButton color="neutral" size="md" class="mt-6" type="submit">
-          Create User
-        </UButton>
+
+<div class="mt-5">
+  <PrimaryButton type="submit" :disabled="loading" :loading="loading">
+    Create user
+
+  </PrimaryButton>
+</div>
+
       </form>
     </div>
   </MainLayout>
@@ -79,48 +78,63 @@
 import MainLayout from "~/layouts/Dashboard/MainLayout.vue";
 import Input from "~/components/Common/Input.vue";
 import Breadcrumb from "~/components/dashboard/Breadcrumb.vue";
+import PrimaryButton from "~/components/Common/PrimaryButton.vue";
+import ValidationError from "~/components/Common/ValidationError.vue";
 
-const toast = useToast();
-
+const userStore = useUserStore()
 // All values must be valid, no empty strings
 const loginStatusOptions = [
-  { label: "User Can Login", value: "active" },
-  { label: "Cannot Login", value: "inactive" },
+  { label: "User Can Login", value:true },
+  { label: "Cannot Login", value: false},
 ];
 
 const verifyEmailOptions = [
-  { label: "Email Verification Required", value: true },
-  { label: "Email Verification Not Required", value: false },
-];
-const Roles = [
-  { label: "Admin", value: 'admin' },
-  { label: "Client", value: 'client' },
-  { label: "Developer", value: 'developer' },
-
+  { label: "Email Verification Required", value: "yes" },
+  { label: "Email Verification Not Required", value: "no" },
 ];
 
 const form = reactive({
+  name: "",
   first_name: "",
   last_name: "",
   email: "",
   password: "",
-  login_status: null,
-  verify_email: null,
-  role: ''
+  password_confirmation: '',
+  is_active: true,
+  verify_email: "yes",
 });
 
-const createClient = async () => {
-  console.log(form)
-  toast.add({
-    title: `created successfully!`,
-    color: 'success',
-    icon: 'i-lucide-check-circle'
-  });
+const loading = ref(false);
+const createUser = async () => {
+  loading.value = true;
+  try {
+    const submitData = {
+      ...form,
+      password_confirmation: form.password,
+      name: `${form.first_name} ${form.last_name}`,
+    };
+
+    const isSuccess = await userStore.createUser(submitData);
+
+
+      if (isSuccess) {
+        form.name = '';
+        form.first_name = '';
+        form.email = '';
+        form.last_name = '';
+        form.password = '';
+      }
+  } catch (error) {
+    console.error('Create user error:', error);
+  } finally {
+    loading.value = false;
+  }
 };
+
 const breadcrumbItems = [
   { label: 'Dashboard', to: '/dashboard' },
-  { label: 'Client List', to: '/admin/client' },
-  { label: 'Client Create', to: '/clients/create' },
+  { label: 'Users List', to: '/users/list' },
+  { label: 'Users Create', to: '/create' },
 
 ]
 </script>

@@ -1,74 +1,67 @@
-<script setup lang="ts">
-import { ref, computed } from 'vue'
-import type { TableColumn, DropdownMenuItem } from '@nuxt/ui'
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import Breadcrumb from '~/components/dashboard/Breadcrumb.vue'
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css'
 
-interface User {
-  id: number
-  name: string
-  active: boolean
-}
 
-const toast = useToast()
+// Store and toast
+const roleStore = useRoleStore()
 
-const data = ref<User[]>([
-  {
-    id: 1,
-    name: 'Lindsay Walton',
-    active: true,
-  },
-  {
-    id: 2,
-    name: 'Lindsay Walton',
-    active: true,
-  }, {
-    id: 3,
-    name: 'Lindsay Walton',
-    active: true,
-  }, {
-    id: 4,
-    name: 'Lindsay Walton',
-    active: true,
-  }, {
-    id: 5,
-    name: 'Lindsay Walton',
-    active: true,
-  },
-
-])
-
-const columns: TableColumn<User>[] = [
+// Table Columns (remove type annotations)
+const columns = [
   { accessorKey: 'id', header: '#' },
   { accessorKey: 'name', header: 'NAME' },
-  { accessorKey: 'active', header: 'ACTIVE' },
+  { accessorKey: 'is_active', header: 'ACTIVE' },
   { id: 'action', header: '' }
 ]
 
+// Filters
 const filters = ref({
   search: '',
   activeInactive: '',
   deleted: '',
-
 })
 
+// Pagination
 const pageSize = ref(10)
 
+// Get client list with mapped properties
+const data = computed(() => {
+  return roleStore.Roles.map(user => ({
+    ...user,
+    is_deleted: user.deleted_at !== null
+  }))
+})
+
+// Filtered data
 const filteredData = computed(() => {
   return data.value.filter(user => {
-    const matchesSearch = !filters.value.search ||
-        user.name.toLowerCase().includes(filters.value.search.toLowerCase())
+    const search = filters.value.search.toLowerCase()
 
-    const matchesActiveInactive = !filters.value.activeInactive ||
-        (filters.value.activeInactive === 'active' && user.active) ||
-        (filters.value.activeInactive === 'inactive' && !user.active)
+    const matchesSearch =
+        !search ||
+        user.name?.toLowerCase().includes(search) ||
+        user.email?.toLowerCase().includes(search) ||
+        user.username?.toLowerCase().includes(search)
 
-    // Fix: Use filters.email instead of filters.verified
+    const matchesActive =
+        !filters.value.activeInactive ||
+        (filters.value.activeInactive === 'active' && user.is_active) ||
+        (filters.value.activeInactive === 'inactive' && !user.is_active)
 
 
-    return matchesSearch && matchesActiveInactive
+    const matchesDeleted =
+        filters.value.deleted === 'all' ||
+        (filters.value.deleted === 'deleted' && user.deleted_at) ||
+        (filters.value.deleted === '' && !user.deleted_at)
+
+    return matchesSearch && matchesActive  && matchesDeleted
   })
 })
 
-function getDropdownActions(user: User): DropdownMenuItem[][] {
+// Dropdown actions
+function getDropdownActions(user) {
   return [
     [
       {
@@ -94,14 +87,16 @@ function getDropdownActions(user: User): DropdownMenuItem[][] {
         }
       },
       {
-        label: 'Delete User',
-        icon: 'i-lucide-trash-2',
+        label: user.deleted_at ? 'Restore User' : 'Delete User',
+        icon: user.deleted_at ? 'i-lucide-rotate-ccw' : 'i-lucide-trash-2',
         color: 'error',
         onSelect: () => {
           toast.add({
-            title: `User ${user.name} deleted`,
-            color: 'error',
-            icon: 'i-lucide-trash-2'
+            title: user.deleted_at
+                ? `User ${user.name} restored`
+                : `User ${user.name} deleted`,
+            color: user.deleted_at ? 'success' : 'error',
+            icon: user.deleted_at ? 'i-lucide-check' : 'i-lucide-trash-2'
           })
         }
       }
@@ -109,46 +104,91 @@ function getDropdownActions(user: User): DropdownMenuItem[][] {
   ]
 }
 
-function toggleActive(user: User) {
-  user.active = !user.active
-  toast.add({
-    title: `${user.name} ${user.active ? 'activated' : 'deactivated'}`,
-    color: user.active ? 'success' : 'warning',
-    icon: user.active ? 'i-lucide-check-circle' : 'i-lucide-pause-circle'
-  })
+const toggleActive = async (user) => {
+  try {
+    await roleStore.toggleActiveStatus(user.id)
+    await roleStore.fetchRoles()
+  } catch (error) {}
 }
 
+const toggleSuspended = async (user) => {
+  try {
+    await roleStore.toggleSuspendedStatus(user.id)
+    await roleStore.fetchRoles()
+  } catch (error) {}
+}
 
+// Clear filters
 function clearFilters() {
   filters.value = {
     search: '',
     activeInactive: '',
-
     deleted: '',
-
   }
 }
 
+// Check if filters are active
 const hasActiveFilters = computed(() => {
-  return Object.values(filters.value).some(filter => filter !== '')
+  return Object.values(filters.value).some(val => val !== '')
 })
-import Breadcrumb from '~/components/dashboard/Breadcrumb.vue'
 
-
+// Breadcrumb
 const breadcrumbItems = [
   { label: 'Dashboard', to: '/dashboard' },
-  { label: 'Roles List', to: 'list' },
+  { label: 'Role List', to: '/roles' }
 ]
+const loading = ref(false)
+
+// Fetch clients on mount
+onMounted(async () => {
+  loading.value = true
+  await roleStore.fetchRoles()
+  loading.value = false
+})
+
+
+const { confirmDelete } = useDelete()
+
+const handleDelete = async (id) => {
+  loading.value = true
+  await confirmDelete(() => roleStore.deleteRole(id))
+  loading.value = false
+}
+
+const handleRestore = async (id) => {
+  loading.value = id
+  try {
+
+    await roleStore.restoreRole(id)
+  } catch (error) {
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleForceDelete = async (id) => {
+  loading.value = id
+  try {
+    await confirmDelete(() => roleStore.forceDeleteRole(id))
+  } catch (error) {
+    console.log(error)
+  } finally {
+    loading.value = false
+  }
+}
+watchEffect(() => {
+  if (loading.value) {
+    NProgress.start()
+  } else {
+    NProgress.done()
+  }
+})
 </script>
 
 <template>
   <div>
-    <!-- Sidebar Navigation -->
-
-    <!-- Main Content -->
     <!-- Breadcrumb -->
     <Breadcrumb :items="breadcrumbItems" />
-
 
     <!-- Page Header -->
     <div class="flex items-center justify-between mb-6">
@@ -184,28 +224,24 @@ const breadcrumbItems = [
           <input
               v-model="filters.search"
               type="text"
-              placeholder="Search"
+              placeholder="Search name, email or username"
               class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 w-64"
           />
 
           <!-- Filter Active/Inactive -->
           <select v-model="filters.activeInactive" class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-            <option value="">Show All</option>
-            <option value="inactive">Inactive Users</option>
-            <option value="inactive">Active Users</option>
-
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
           </select>
-
-          <!-- Filter Status -->
-
-
-
 
 
           <!-- Filter Deleted -->
+          <!-- Filter Deleted -->
           <select v-model="filters.deleted" class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-            <option value="">Show All</option>
-            <option value="deleted">Show Deleted Only</option>
+            <option value="">Active Users</option>
+            <option value="deleted">Deleted Users</option>
+            <option value="all">All Users</option>
           </select>
         </div>
       </div>
@@ -217,10 +253,8 @@ const breadcrumbItems = [
           <tr class="border-b border-gray-200 dark:border-gray-700">
             <th class="text-left py-4 px-6 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">#</th>
             <th class="text-left py-4 px-6 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">NAME</th>
-            <th class="text-left py-4 px-6 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">STATUS</th>
+            <th class="text-left py-4 px-6 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">ACTIVE</th>
             <th class="text-right py-4 px-6 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"></th>
-
-
           </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -229,26 +263,40 @@ const breadcrumbItems = [
             <td class="py-4 px-6 text-sm text-gray-900 dark:text-gray-100">
               {{ user.id }}
             </td>
-            <td class="py-4 px-6 text-sm text-gray-900 dark:text-gray-100">
-              {{ user.name }}
+
+            <!-- Name -->
+            <td class="py-4 px-6">
+              <div class="flex items-center gap-3">
+                <UAvatar
+                    :src="user.profile?.avatar || `https://i.pravatar.cc/120?img=${user.id}`"
+                    size="sm"
+                    :alt="`${user.name} avatar`"
+                />
+                <div>
+                  <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ user.name }}</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">{{ user.email }}</p>
+                </div>
+              </div>
             </td>
 
+
+
+            <!-- Active Toggle -->
             <td class="py-4 px-6">
               <label class="relative inline-flex items-center cursor-pointer">
                 <input
                     type="checkbox"
                     class="sr-only"
-                    :checked="user.active"
+                    :checked="user.is_active"
                     @change="toggleActive(user)"
                 />
                 <div class="w-10 h-6 bg-gray-200 dark:bg-gray-700 rounded-full transition-colors duration-200"
-                     :class="user.active ? 'bg-green-500 dark:bg-green-600' : 'bg-gray-300 dark:bg-gray-600'">
+                     :class="user.is_active ? 'bg-green-500 dark:bg-green-600' : 'bg-gray-300 dark:bg-gray-600'">
                   <div class="w-4 h-4 bg-white dark:bg-gray-200 rounded-full shadow transform transition-transform duration-200 translate-y-1"
-                       :class="user.active ? 'translate-x-5' : 'translate-x-1'"></div>
+                       :class="user.is_active ? 'translate-x-5' : 'translate-x-1'"></div>
                 </div>
               </label>
             </td>
-
 
 
 
@@ -263,8 +311,9 @@ const breadcrumbItems = [
                     color="neutral"
                     @click="toast.add({ title: `Viewing ${user.name}'s profile`, color: 'info' })"
                 />
-                <!-- Edit -->
-                <Nuxt-link :to="`${user.id}/edit`" >
+
+                <!-- Edit (only show for non-deleted users) -->
+                <Nuxt-link v-if="!user.deleted_at" :to="`${user.id}/edit`">
                   <UButton
                       icon="i-lucide-edit"
                       variant="ghost"
@@ -272,14 +321,36 @@ const breadcrumbItems = [
                       color="neutral"
                   />
                 </Nuxt-link>
-                <!-- Delete -->
-                <UButton
-                    icon="i-lucide-trash-2"
-                    variant="ghost"
-                    size="sm"
-                    color="error"
-                    @click="toast.add({ title: `User ${user.name} deleted`, color: 'error' })"
-                />
+
+                <!-- Delete/Restore/Force Delete -->
+                <template v-if="!user.deleted_at">
+                  <UButton
+                      icon="i-lucide-trash-2"
+                      variant="ghost"
+                      size="sm"
+                      color="error"
+                      @click="handleDelete(user.id)"
+                      :loading="loading === user.id"
+                  />
+                </template>
+                <template v-else>
+                  <UButton
+                      icon="i-lucide-rotate-ccw"
+                      variant="ghost"
+                      size="sm"
+                      color="success"
+                      @click="handleRestore(user.id)"
+                      :loading="loading === user.id"
+                  />
+                  <UButton
+                      icon="i-lucide-trash-2"
+                      variant="ghost"
+                      size="sm"
+                      color="error"
+                      @click="handleForceDelete(user.id)"
+                      :loading="loading === user.id"
+                  />
+                </template>
               </div>
             </td>
           </tr>
@@ -290,7 +361,7 @@ const breadcrumbItems = [
       <!-- Empty State -->
       <div v-if="filteredData.length === 0" class="text-center py-12">
         <div class="text-4xl mb-4">📝</div>
-        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No clients found</h3>
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No Roles found</h3>
         <p class="text-gray-500 dark:text-gray-400">Try adjusting your search or filter criteria</p>
       </div>
     </div>
@@ -298,33 +369,5 @@ const breadcrumbItems = [
 </template>
 
 <style scoped>
-/* Smooth transitions */
-* {
-  transition: all 0.2s ease-in-out;
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.5);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(156, 163, 175, 0.7);
-}
-
-/* Focus states */
-input:focus, select:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
+/* Your existing styles */
 </style>
