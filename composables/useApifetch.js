@@ -1,6 +1,7 @@
 export default function (url, options = {}) {
   options.headers = options.headers || {};
-
+  
+  const config = useRuntimeConfig();
   const token = useCookie("XSRF-TOKEN");
   const accessToken = useCookie("access_token"); // or localStorage, Pinia store, etc.
 
@@ -11,7 +12,7 @@ export default function (url, options = {}) {
     options.headers["Authorization"] = `Bearer ${accessToken.value}`;
   }
 
-  return useFetch("http://localhost:8000" + url, {
+  return useFetch(config.public.apiBaseUrl + url, {
     ...options,
     credentials: "include",
     headers: {
@@ -19,7 +20,6 @@ export default function (url, options = {}) {
       Accept: "application/json",
       "Content-Type": "application/json",
       ...useRequestHeaders(["cookie"]),
-      referer: "http://localhost:3000",
     },
   });
 }
