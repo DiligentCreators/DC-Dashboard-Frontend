@@ -1,5 +1,6 @@
 
 export const $api = (url, options = {}, headers = {}) => {
+  const config = useRuntimeConfig();
   const token = useCookie("XSRF-TOKEN");
 
   // Add CSRF token header if available
@@ -16,7 +17,7 @@ export const $api = (url, options = {}, headers = {}) => {
   };
 
   const apiFetch = $fetch.create({
-    baseURL: "http://localhost:8000",
+    baseURL: config.public.apiBaseUrl,
     headers: allHeaders,
     credentials: "include",
   });
