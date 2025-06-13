@@ -181,9 +181,25 @@ export const useRoleStore = defineStore("client", () => {
     }
 
 
+    const allPermissions = ref([])
+
+    const fetchAllPermissions = async () => {
+        try {
+            const { data } = await $api('/api/admin/permissions', {
+                headers: {
+                    Authorization: `Bearer ${token.value}`,
+                },
+            })
+            allPermissions.value = data
+        } catch (e) {
+            toast.add({ title: 'Failed to fetch permissions', color: 'red' })
+        }
+    }
 
 
     return {
+        fetchAllPermissions,
+        allPermissions,
         toggleActiveStatus,
         Roles,
         selectedRole,

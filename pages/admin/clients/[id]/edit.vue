@@ -6,6 +6,7 @@ import Input from '~/components/Common/Input.vue'
 import Breadcrumb from '~/components/dashboard/Breadcrumb.vue'
 import MainLayout from '~/layouts/Dashboard/MainLayout.vue'
 import { useClientStore } from '~/stores/client'
+import ValidationError from "~/components/Common/ValidationError.vue";
 const loading = ref(false)
 const breadcrumbItems = [
   { label: 'Dashboard', to: '/dashboard' },
@@ -42,6 +43,7 @@ onMounted(async () => {
     const profile = user.profile || {}
 
     form.value = {
+      id: user.id,
       username: user.username || '',
       email: user.email || '',
       firstName: user.name?.split(' ')[0] || '',
@@ -70,10 +72,8 @@ async function handleUpdatePassword() {
     await clientStore.updateClientPassword(id, {
       password: passwordForm.password,
     });
-    toast.add({ title: 'Password updated successfully', color: 'success' });
     passwordForm.password = '';
   } catch (err) {
-    toast.add({ title: 'Failed to update password', color: 'error' });
     console.error(err);
   }
 }
@@ -93,10 +93,21 @@ const markEmailAsVerified = () => {
   toast.add({ title: 'Email marked as verified', color: 'success' })
 }
 
-const suspendClient = () => {
-  form.value.suspended = true
-  toast.add({ title: 'Client suspended', color: 'error' })
-}
+const suspendClient = async (user) => {
+  try {
+    await clientStore.toggleSuspendedStatus(user.id);
+    await clientStore.fetchClients();
+    form.value.suspended = true
+  } catch (error) {
+    console.error('Error toggling suspension:', error);
+    form.value.suspended = false
+
+  }
+};
+
+
+
+
 const saveChanges = async () => {
   try {
     const submitData = {
@@ -193,15 +204,17 @@ const options = ref([
               >
                 Mark Email As Verified
               </UButton>
+
               <UButton
                   color="error"
                   variant="outline"
                   size="sm"
-                  @click="suspendClient"
+                  @click="suspendClient(form)"
                   :disabled="form.suspended"
               >
                 Suspend Client
               </UButton>
+
             </div>
           </div>
         </div>
@@ -253,35 +266,6 @@ const options = ref([
                   {{ form.email || 'N/A' }}
                 </p>
               </div>
-              <div class="flex gap-3">
-                <UButton
-                    color="success"
-                    variant="outline"
-                    size="md"
-                    @click="loginAsClient"
-                    :disabled="form.suspended"
-                >
-                  Login As Client
-                </UButton>
-                <UButton
-                    color="success"
-                    variant="outline"
-                    size="md"
-                    @click="markEmailAsVerified"
-                    :disabled="form.emailVerified"
-                >
-                  Mark Email As Verified
-                </UButton>
-                <UButton
-                    color="error"
-                    variant="outline"
-                    size="md"
-                    @click="suspendClient"
-                    :disabled="form.suspended"
-                >
-                  Suspend Client
-                </UButton>
-              </div>
             </div>
 
             <!-- Personal Details Tab -->
@@ -300,6 +284,8 @@ const options = ref([
                           size="md"
                           class="w-full"
                       />
+                      <ValidationError field="name" />
+
                     </div>
                     <div>
                       <Input

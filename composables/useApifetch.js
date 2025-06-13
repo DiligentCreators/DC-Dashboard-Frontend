@@ -1,9 +1,9 @@
 export default function (url, options = {}) {
   options.headers = options.headers || {};
-  
+
   const config = useRuntimeConfig();
   const token = useCookie("XSRF-TOKEN");
-  const accessToken = useCookie("access_token"); // or localStorage, Pinia store, etc.
+  const accessToken = useCookie("access_token");
 
   if (token.value) {
     options.headers["X-XSRF-TOKEN"] = token.value;
@@ -20,6 +20,7 @@ export default function (url, options = {}) {
       Accept: "application/json",
       "Content-Type": "application/json",
       ...useRequestHeaders(["cookie"]),
+
     },
   });
 }

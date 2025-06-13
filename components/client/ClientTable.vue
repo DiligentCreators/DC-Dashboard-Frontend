@@ -7,8 +7,7 @@ import 'nprogress/nprogress.css'
 
 // Store and toast
 const clientStore = useClientStore()
-const toast = useToast()
-
+const  authStore = useAuthStore()
 // Table Columns (remove type annotations)
 const columns = [
   { accessorKey: 'id', header: '#' },
@@ -68,49 +67,6 @@ const filteredData = computed(() => {
   })
 })
 
-// Dropdown actions
-function getDropdownActions(user) {
-  return [
-    [
-      {
-        label: 'View Profile',
-        icon: 'i-lucide-user',
-        onSelect: () => {
-          toast.add({
-            title: `Viewing ${user.name}'s profile`,
-            color: 'info',
-            icon: 'i-lucide-user'
-          })
-        }
-      },
-      {
-        label: 'Edit User',
-        icon: 'i-lucide-edit',
-        onSelect: () => {
-          toast.add({
-            title: `Edit ${user.name}`,
-            color: 'info',
-            icon: 'i-lucide-edit'
-          })
-        }
-      },
-      {
-        label: user.deleted_at ? 'Restore User' : 'Delete User',
-        icon: user.deleted_at ? 'i-lucide-rotate-ccw' : 'i-lucide-trash-2',
-        color: 'error',
-        onSelect: () => {
-          toast.add({
-            title: user.deleted_at
-                ? `User ${user.name} restored`
-                : `User ${user.name} deleted`,
-            color: user.deleted_at ? 'success' : 'error',
-            icon: user.deleted_at ? 'i-lucide-check' : 'i-lucide-trash-2'
-          })
-        }
-      }
-    ]
-  ]
-}
 
 const toggleActive = async (user) => {
   try {
@@ -181,6 +137,16 @@ const handleForceDelete = async (id) => {
     await confirmDelete(() => clientStore.forceDeleteClient(id))
   } catch (error) {
     console.log(error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const loginAsUser = async (id) => {
+  loading.value = id
+  try {
+    await authStore.getLoginAsUser(id)
+  } catch (error) {
   } finally {
     loading.value = false
   }
@@ -350,8 +316,9 @@ watchEffect(() => {
                     variant="ghost"
                     size="sm"
                     color="neutral"
-                    @click="toast.add({ title: `Viewing ${user.name}'s profile`, color: 'info' })"
+                    @click="loginAsUser(user.id)"
                 />
+
 
                 <!-- Edit (only show for non-deleted users) -->
                 <Nuxt-link v-if="!user.deleted_at" :to="`clients/${user.id}/edit`">

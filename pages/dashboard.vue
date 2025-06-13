@@ -2,7 +2,13 @@
 <MainLayout>
 
   <div class="mb-10">
-    <h1 class="text-2xl font-bold mb-4">Admin Overview {{auth.user.name}}</h1>
+    <div v-if="auth.loginAdminAsUser">
+      <h1 class="text-2xl font-bold mb-4">Admin Overview {{auth.loginAdminAsUser?.name || 'unkonwon'  }}</h1>
+    </div>
+    <div v-else>
+      <h1 class="text-2xl font-bold mb-4">Admin Overview {{ auth.user?.user?.name || 'unkonwon' }}</h1>
+    </div>
+
 
     <!-- Stats -->
     <Card />

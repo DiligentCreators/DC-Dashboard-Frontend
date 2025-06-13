@@ -16,11 +16,13 @@
             placeholder="Search by template name..."
             class="w-full md:w-64 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-white"
         />
-        <button
-            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm"
+        <NuxtLink
+            to="/email/create"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm inline-block"
         >
           + Add New
-        </button>
+        </NuxtLink>
+
       </div>
     </div>
 

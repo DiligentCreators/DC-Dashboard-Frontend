@@ -28,9 +28,9 @@ const pageSize = ref(10)
 
 // Get client list with mapped properties
 const data = computed(() => {
-  return roleStore.Roles.map(user => ({
-    ...user,
-    is_deleted: user.deleted_at !== null
+  return roleStore.Roles.map(role => ({
+    ...role,
+    is_deleted: role.deleted_at !== null
   }))
 })
 
@@ -60,49 +60,6 @@ const filteredData = computed(() => {
   })
 })
 
-// Dropdown actions
-function getDropdownActions(user) {
-  return [
-    [
-      {
-        label: 'View Profile',
-        icon: 'i-lucide-user',
-        onSelect: () => {
-          toast.add({
-            title: `Viewing ${user.name}'s profile`,
-            color: 'info',
-            icon: 'i-lucide-user'
-          })
-        }
-      },
-      {
-        label: 'Edit User',
-        icon: 'i-lucide-edit',
-        onSelect: () => {
-          toast.add({
-            title: `Edit ${user.name}`,
-            color: 'info',
-            icon: 'i-lucide-edit'
-          })
-        }
-      },
-      {
-        label: user.deleted_at ? 'Restore User' : 'Delete User',
-        icon: user.deleted_at ? 'i-lucide-rotate-ccw' : 'i-lucide-trash-2',
-        color: 'error',
-        onSelect: () => {
-          toast.add({
-            title: user.deleted_at
-                ? `User ${user.name} restored`
-                : `User ${user.name} deleted`,
-            color: user.deleted_at ? 'success' : 'error',
-            icon: user.deleted_at ? 'i-lucide-check' : 'i-lucide-trash-2'
-          })
-        }
-      }
-    ]
-  ]
-}
 
 const toggleActive = async (user) => {
   try {
@@ -111,12 +68,7 @@ const toggleActive = async (user) => {
   } catch (error) {}
 }
 
-const toggleSuspended = async (user) => {
-  try {
-    await roleStore.toggleSuspendedStatus(user.id)
-    await roleStore.fetchRoles()
-  } catch (error) {}
-}
+
 
 // Clear filters
 function clearFilters() {
@@ -267,11 +219,7 @@ watchEffect(() => {
             <!-- Name -->
             <td class="py-4 px-6">
               <div class="flex items-center gap-3">
-                <UAvatar
-                    :src="user.profile?.avatar || `https://i.pravatar.cc/120?img=${user.id}`"
-                    size="sm"
-                    :alt="`${user.name} avatar`"
-                />
+
                 <div>
                   <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ user.name }}</p>
                   <p class="text-sm text-gray-500 dark:text-gray-400">{{ user.email }}</p>
@@ -303,14 +251,7 @@ watchEffect(() => {
             <!-- Actions -->
             <td class="py-4 px-6 text-right">
               <div class="flex items-center justify-end gap-2">
-                <!-- View Profile -->
-                <UButton
-                    icon="i-lucide-user"
-                    variant="ghost"
-                    size="sm"
-                    color="neutral"
-                    @click="toast.add({ title: `Viewing ${user.name}'s profile`, color: 'info' })"
-                />
+
 
                 <!-- Edit (only show for non-deleted users) -->
                 <Nuxt-link v-if="!user.deleted_at" :to="`${user.id}/edit`">
@@ -338,7 +279,7 @@ watchEffect(() => {
                       icon="i-lucide-rotate-ccw"
                       variant="ghost"
                       size="sm"
-                      color="success"
+                      color="ne"
                       @click="handleRestore(user.id)"
                       :loading="loading === user.id"
                   />

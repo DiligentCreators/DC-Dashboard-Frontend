@@ -1,7 +1,8 @@
 <template>
 
   <FormLayout>
-  <form @submit.prevent="handleLogin" class="space-y-4">
+
+    <form @submit.prevent="handleLogin" class="space-y-4">
     <div>
       <BaseInput label="Email" type="email"
                  placeholder="examlpe@gmail.com"
@@ -21,6 +22,7 @@
 
 
     </div>
+      <p v-if="common.Invalid" class="text-red-500 h-5">{{ common.Invalid }}</p>
 
     <div class="text-sm">
 
@@ -47,8 +49,13 @@ import FormLayout from "~/layouts/Guest/FormLayout.vue";
 const auth = useAuthStore();
 const  loading = ref(false);
 
+
+const commonStore = useCommonStore();
+const common = commonStore;
+
+
 const form = reactive({
-  email: "khan5@gmail.com",
+  email: "khan@gmail.com",
   password: "password",
 });
 

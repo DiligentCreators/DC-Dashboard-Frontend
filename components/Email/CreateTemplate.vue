@@ -311,14 +311,7 @@
         >
           Save Template
         </UButton>
-        <UButton
-            variant="outline"
-            color="neutral"
-            size="md"
-            :to="'/email-templates'"
-        >
-          Cancel
-        </UButton>
+
       </div>
     </div>
   </MainLayout>
