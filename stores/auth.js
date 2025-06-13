@@ -10,6 +10,7 @@ export const useAuthStore = defineStore("auth", () => {
     const user = ref(null);
     const isAdmin = ref(false);
     const loginAdminAsUser = ref(null); // for real admin
+    const token = useCookie("auth_token");
 
     const isLoggedIn = computed(() => !!user.value);
 
