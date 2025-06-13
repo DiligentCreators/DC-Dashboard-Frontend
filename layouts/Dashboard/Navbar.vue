@@ -35,9 +35,15 @@
         </button>
 
         <div v-if="dropdownOpen" class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 shadow-lg rounded-md py-2 z-50">
-          <NuxtLink to="/profile" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200">
-            <Icon name="heroicons-outline:user" class="w-4 h-4" /> Profile
+          <NuxtLink
+              v-if="auth.user.user && auth.user.user.id"
+              to="/profile"
+              class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200"
+          >
+            <Icon name="heroicons-outline:user" class="w-4 h-4" />
+            Profile
           </NuxtLink>
+
           <NuxtLink to="/settings" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200">
             <Icon name="heroicons-outline:cog-6-tooth" class="w-4 h-4" /> Settings
           </NuxtLink>

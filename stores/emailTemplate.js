@@ -4,12 +4,35 @@ import { $api } from '~/composables/api'
 import { useCookie } from '#app'
 import { useCommonStore } from '~/stores/common'
 import { useRouter } from 'vue-router'
-import { toast } from "vue3-toastify"; // ✅ ONLY THIS if using vue3-toastify
+import { toast } from "vue3-toastify";
 
 export const useEmailTemplateStore = defineStore('email', () => {
     const token = useCookie('auth_token')
     const common = useCommonStore()
 
+    const templates = ref([])
+    const isLoading = ref(false)
+
+
+    async function getTemplates() {
+        isLoading.value = true
+        common.validationError = null
+        try {
+            const res = await $api('/api/admin/email-templates', {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${token.value}`
+                }
+            })
+
+            templates.value = res.data || []
+        } catch (err) {
+            toast.error('Failed to fetch templates.')
+            console.error(err)
+        } finally {
+            isLoading.value = false
+        }
+    }
 
     async function createTemplate(form, headerForm, footerForm) {
         common.validationError = null
@@ -58,6 +81,7 @@ export const useEmailTemplateStore = defineStore('email', () => {
             })
 
             toast.success("Successfully!");
+            return true
 
         } catch (err) {
             if (err.status === 422) {
@@ -69,11 +93,14 @@ export const useEmailTemplateStore = defineStore('email', () => {
                 toast.error("Something went wrong.");
 
             }
+            return false
+
             throw err
         }
     }
 
     return {
-        createTemplate
+        createTemplate,
+        getTemplates
     }
 })

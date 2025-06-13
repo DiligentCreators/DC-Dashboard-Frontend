@@ -5,6 +5,7 @@ import { useToast } from '#imports'
 import Input from '~/components/Common/Input.vue'
 import Breadcrumb from '~/components/dashboard/Breadcrumb.vue'
 import MainLayout from '~/layouts/Dashboard/MainLayout.vue'
+import ValidationError from "~/components/Common/ValidationError.vue";
 const loading = ref(false)
 const breadcrumbItems = [
   { label: 'Dashboard', to: '/dashboard' },
@@ -41,6 +42,7 @@ onMounted(async () => {
     const profile = user.profile || {}
 
     form.value = {
+      id: user.id,
       username: user.username || '',
       email: user.email || '',
       firstName: user.name?.split(' ')[0] || '',
@@ -75,10 +77,6 @@ const markEmailAsVerified = () => {
   toast.add({ title: 'Email marked as verified', color: 'success' })
 }
 
-const suspendUser = () => {
-  form.value.suspended = true
-  toast.add({ title: 'User suspended', color: 'error' })
-}
 const saveChanges = async () => {
   try {
     const submitData = {
@@ -89,6 +87,7 @@ const saveChanges = async () => {
       is_suspended: form.value.suspended,
 
       // Profile data should be nested if your API expects it
+
       profile: {
         gender: form.value.gender,
         dob: form.value.dateOfBirth,
@@ -98,10 +97,7 @@ const saveChanges = async () => {
         zipcode: form.value.zipCode,
       }
     };
-
     await userStore.updateUser(id, submitData);
-
-    console.log(submitData)
   } catch (error) {
     console.error('Failed to update client:', error);
   }
@@ -114,6 +110,33 @@ const options = ref([
   { value: 'female', label: 'Female' },
   { value: 'other', label: 'Other' }
 ])
+const passwordForm = reactive({
+  password: ''
+})
+async function handleUpdatePassword() {
+  try {
+    await userStore.updateUserPassword(id, {
+      password: passwordForm.password,
+    });
+    passwordForm.password = '';
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+
+const suspendUser = async (user) => {
+  try {
+    await userStore.toggleSuspendedStatus(user.id);
+    await userStore.fetchUsers();
+    form.value.suspended = true
+
+  } catch (error) {
+    console.error('Error toggling suspension:', error);
+    form.value.suspended = false
+
+  }
+};
 </script>
 
 <template>
@@ -179,7 +202,7 @@ const options = ref([
                   color="error"
                   variant="outline"
                   size="sm"
-                  @click="suspendUser"
+                  @click="suspendUser(form)"
                   :disabled="form.suspended"
               >
                 Suspend User
@@ -235,35 +258,6 @@ const options = ref([
                   {{ form.email || 'N/A' }}
                 </p>
               </div>
-              <div class="flex gap-3">
-                <UButton
-                    color="success"
-                    variant="outline"
-                    size="md"
-                    @click="loginAsUser"
-                    :disabled="form.suspended"
-                >
-                  Login As User
-                </UButton>
-                <UButton
-                    color="success"
-                    variant="outline"
-                    size="md"
-                    @click="markEmailAsVerified"
-                    :disabled="form.emailVerified"
-                >
-                  Mark Email As Verified
-                </UButton>
-                <UButton
-                    color="error"
-                    variant="outline"
-                    size="md"
-                    @click="suspendUser"
-                    :disabled="form.suspended"
-                >
-                  Suspend User
-                </UButton>
-              </div>
             </div>
 
             <!-- Personal Details Tab -->
@@ -282,6 +276,7 @@ const options = ref([
                           size="md"
                           class="w-full"
                       />
+                      <ValidationError field="name" />
                     </div>
                     <div>
                       <Input
@@ -367,12 +362,12 @@ const options = ref([
             <!-- Change Password Tab -->
             <div v-if="activeTab === 'password'">
               <div class="space-y-4 max-w-md">
-
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     New Password
                   </label>
                   <Input
+                      v-model="passwordForm.password"
                       type="password"
                       placeholder="New Password"
                       size="md"
@@ -384,7 +379,7 @@ const options = ref([
                   <UButton
                       color="neutral"
                       size="md"
-                      @click="toast.add({ title: 'Password updated successfully', color: 'success', icon: 'i-lucide-lock' })"
+                      @click="handleUpdatePassword"
                   >
                     Update Password
                   </UButton>

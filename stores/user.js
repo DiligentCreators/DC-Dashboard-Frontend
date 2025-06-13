@@ -34,12 +34,12 @@ export const useUserStore = defineStore("user", () => {
 
 
     // Create new user
-    async function createUser(clientData) {
+    async function createUser(userData) {
         common.validationError = null;
         try {
             await $api("/api/admin/staff", {
                 method: "post",
-                body: clientData,
+                body: userData,
                 headers: { Authorization: `Bearer ${token.value}` },
             });
             toast.success("User created successfully");
@@ -50,14 +50,14 @@ export const useUserStore = defineStore("user", () => {
                 common.validationError = err.data.errors;
                 toast.error("Validation failed.");
             } else {
-                toast.error("Failed to create client.");
+                toast.error("Failed to create user.");
             }
             return true;
 
         }
     }
 
-    // Get a specific client
+    // Get a specific user
     async function getUser(id) {
         try {
             const { data, error } = await useApifetch(`/api/admin/staff/${id}`, {
@@ -66,14 +66,14 @@ export const useUserStore = defineStore("user", () => {
                 },
             });
 
-            if (error.value) throw new Error("Failed to get client");
+            if (error.value) throw new Error("Failed to get user");
             selectedUser.value = data.value;
         } catch (err) {
-            toast.error("Could not fetch client details.");
+            toast.error("Could not fetch user details.");
         }
     }
 
-    // Update a client
+    // Update a user
     async function updateUser(id, updatedData) {
         common.validationError = null;
         try {
@@ -91,12 +91,33 @@ export const useUserStore = defineStore("user", () => {
                 common.validationError = err.data.errors;
                 toast.error("Validation failed.");
             } else {
-                toast.error("Failed to update client.");
+                toast.error("Failed to update user.");
             }
         }
     }
-
-    // Delete a client
+    // Update a user password
+    async function updateUserPassword(id, updatedData) {
+        common.validationError  = null;
+        try {
+            await $api(`/api/admin/staff/${id}/update-password`, {
+                method: "put",
+                body: updatedData,
+                headers: {
+                    Authorization: `Bearer ${token.value}`,
+                },
+            });
+            toast.success("User password updated successfully");
+            await fetchUsers();
+        } catch (err) {
+            if (err.status === 422) {
+                common.validationError  = err.data.errors;
+                toast.error("Validation failed.");
+            } else {
+                toast.error("Failed to update user password.");
+            }
+        }
+    }
+    // Delete a user
     async function deleteUser(id) {
         try {
             await $api(`/api/admin/staff/${id}`, {
@@ -108,7 +129,7 @@ export const useUserStore = defineStore("user", () => {
             toast.success("User deleted");
             await fetchUsers();
         } catch (err) {
-            toast.error("Failed to delete client.");
+            toast.error("Failed to delete user.");
         }
     }
     async function restoreUser(id) {
@@ -122,7 +143,7 @@ export const useUserStore = defineStore("user", () => {
             toast.success("User restored");
             await fetchUsers();
         } catch (err) {
-            toast.error("Failed to restore client.");
+            toast.error("Failed to restore user.");
         }
     }
     async function forceDeleteUser(id) {
@@ -136,7 +157,7 @@ export const useUserStore = defineStore("user", () => {
             toast.success("User deleted");
             await fetchUsers();
         } catch (err) {
-            toast.error("Failed to delete client.");
+            toast.error("Failed to delete user.");
         }
     }
     async function toggleActiveStatus(id) {
@@ -172,6 +193,7 @@ export const useUserStore = defineStore("user", () => {
 
 
     return {
+        updateUserPassword,
         toggleActiveStatus,
         toggleSuspendedStatus,
         users,

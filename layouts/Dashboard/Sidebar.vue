@@ -149,7 +149,7 @@ const menu = [
     children: [
       { label: 'Email Templates', to: '/email/email-templates', icon: 'lucide:list' },
       { label: 'Create New Email', to: '/email/create', icon: 'lucide:user-plus' },
-      { label: 'Global Header & Footer', to: '/roles/list', icon: 'lucide:shield-check' }
+      { label: 'Global Header & Footer', to: '/email/global-email-templates', icon: 'lucide:shield-check' }
     ]
   }
 ]
