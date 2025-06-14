@@ -99,16 +99,20 @@
   </aside>
 </template>
 <script setup>
-import { ref } from 'vue'
-import { useRoute } from 'vue-router'
 
-defineProps({
-  isOpen: Boolean
-})
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+const authStore = useAuthStore()
+
+defineProps({ isOpen: Boolean })
 defineEmits(['close'])
 
 const route = useRoute()
 const openMenus = ref({})
+
+// Fake permissions from store
+const roles = computed(() => authStore.user?.data?.roles ?? [])
+const permissions = computed(() => authStore.user?.data?.permissions ?? [])
 
 function toggleMenu(label) {
   openMenus.value[label] = !openMenus.value[label]
@@ -120,8 +124,7 @@ function isMenuOpen(label) {
 
 function isChildActive(children) {
   return children.some(
-      (child) =>
-          route.path === child.to || route.path.startsWith(child.to + '/')
+      (child) => route.path === child.to || route.path.startsWith(child.to + '/')
   )
 }
 
@@ -131,28 +134,102 @@ function linkClasses(path) {
   ].join(' ')
 }
 
-const menu = [
-  { label: 'Dashboard', to: '/dashboard', icon: 'lucide:layout-dashboard' },
-  { label: 'Clients', to: '/admin/client', icon: 'lucide:user-square' },
+//  Raw menu with permissions
+const rawMenu = [
+  {
+    label: 'Dashboard',
+    to: '/dashboard',
+    icon: 'lucide:layout-dashboard',
+    permissions: [] // Always visible
+  },
+  {
+    label: 'Clients',
+    to: '/admin/client',
+    icon: 'lucide:user-square',
+    permissions: ['clients.list', 'clients.create']
+  },
   {
     label: 'Manage Users',
     icon: 'lucide:users-round',
+    permissions: [],
     children: [
-      { label: 'User List', to: '/users/list', icon: 'lucide:list' },
-      { label: 'Create User', to: '/users/create', icon: 'lucide:user-plus' },
-      { label: 'Manage Roles', to: '/roles/list', icon: 'lucide:shield-check' }
+      {
+        label: 'User List',
+        to: '/users/list',
+        icon: 'lucide:list',
+        permissions: ['users.list']
+      },
+      {
+        label: 'Create User',
+        to: '/users/create',
+        icon: 'lucide:user-plus',
+        permissions: ['users.create']
+      },
+      {
+        label: 'Manage Roles',
+        to: '/roles/list',
+        icon: 'lucide:shield-check',
+        permissions: ['roles.list']
+      }
     ]
   },
   {
     label: 'Email & Setting',
-    icon: 'lucide:users-round',
+    icon: 'lucide:mail',
+    permissions: [],
     children: [
-      { label: 'Email Templates', to: '/email/email-templates', icon: 'lucide:list' },
-      { label: 'Create New Email', to: '/email/create', icon: 'lucide:user-plus' },
-      { label: 'Global Header & Footer', to: '/email/global-email-templates', icon: 'lucide:shield-check' }
+      {
+        label: 'Email Templates',
+        to: '/email/email-templates',
+        icon: 'lucide:list',
+        permissions: ['email-templates.list']
+      },
+      {
+        label: 'Create New Email',
+        to: '/email/create',
+        icon: 'lucide:user-plus',
+        permissions: ['email-templates.create']
+      },
+      {
+        label: 'Global Header & Footer',
+        to: '/email/global-email-templates',
+        icon: 'lucide:shield-check',
+        permissions: ['global-email-templates.list']
+      }
     ]
   }
 ]
+
+//  Helper: check if user has at least 1 required permission
+function hasAnyPermission(required = []) {
+  if (!required.length) return true // no restriction
+  return required.some(p => permissions.value.includes(p))
+}
+
+//  Build filtered menu
+const menu = computed(() => {
+  return rawMenu
+      .map((item) => {
+        if (item.children) {
+          const filteredChildren = item.children.filter(child =>
+              hasAnyPermission(child.permissions)
+          )
+          if (filteredChildren.length > 0) {
+            return {
+              ...item,
+              children: filteredChildren
+            }
+          }
+          return null
+        } else {
+          return hasAnyPermission(item.permissions) ? item : null
+        }
+      })
+      .filter(Boolean)
+})
+
+
+
 
 
 </script>

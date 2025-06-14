@@ -28,7 +28,7 @@
       </button>
 
       <!-- Profile Dropdown -->
-      <div v-click-outside="() => dropdownOpen = false" class="relative">
+      <div  class="relative">
         <button @click="dropdownOpen = !dropdownOpen" class="flex items-center gap-1">
           <img src="https://i.pravatar.cc/40" alt="Avatar" class="w-8 h-8 rounded-full border-2 border-gray-300 dark:border-gray-600" />
           <Icon name="heroicons:chevron-down" class="w-4 h-4 text-gray-500 dark:text-gray-300" />
@@ -36,7 +36,7 @@
 
         <div v-if="dropdownOpen" class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 shadow-lg rounded-md py-2 z-50">
           <NuxtLink
-              v-if="auth.user.user && auth.user.user.id"
+              v-if="auth.user.data && auth.user.data.id"
               to="/profile"
               class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200"
           >
@@ -44,9 +44,9 @@
             Profile
           </NuxtLink>
 
-          <NuxtLink to="/settings" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200">
-            <Icon name="heroicons-outline:cog-6-tooth" class="w-4 h-4" /> Settings
-          </NuxtLink>
+<!--          <NuxtLink to="/settings" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200">-->
+<!--            <Icon name="heroicons-outline:cog-6-tooth" class="w-4 h-4" /> Settings-->
+<!--          </NuxtLink>-->
           <form @submit.prevent="handeLogout">
           <button type="submit" class="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm text-red-600 dark:text-red-400">
             <Icon name="heroicons-outline:arrow-right-on-rectangle" class="w-4 h-4" /> Logout

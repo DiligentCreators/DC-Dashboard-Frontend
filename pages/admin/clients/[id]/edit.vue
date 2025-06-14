@@ -143,13 +143,22 @@ const options = ref([
   { value: 'female', label: 'Female' },
   { value: 'other', label: 'Other' }
 ])
+definePageMeta({
+  middleware: ["auth"],
+});
+
+const  authStore = useAuthStore();
+import NoPermission from  '@/components/Common/NoPermission.vue'
+import ClientTable from "~/components/client/ClientTable.vue";
+const permissions = computed(() => authStore.user?.data?.permissions ?? []);
+
 </script>
 
 <template>
   <MainLayout>
     <Breadcrumb :items="breadcrumbItems" />
 
-    <div>
+    <div  v-if="permissions.includes('clients.update')">
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-12">
         <div class="text-4xl mb-4">⏳</div>
@@ -399,6 +408,8 @@ const options = ref([
         </div>
       </div>
     </div>
+
+    <NoPermission v-else/>
   </MainLayout>
 </template>
 

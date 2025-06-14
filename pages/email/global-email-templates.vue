@@ -11,6 +11,8 @@
 </template>
 
 <script setup>
-
+definePageMeta({
+  middleware: ["auth"],
+});
 import MainLayout from "~/layouts/Dashboard/MainLayout.vue";
 </script>

@@ -252,10 +252,6 @@
 // Page meta
 import MainLayout from "~/layouts/Dashboard/MainLayout.vue";
 
-definePageMeta({
-  title: 'Application Settings',
-  layout: 'dashboard'
-})
 
 // Reactive data
 const activeTab = ref('application')
@@ -338,6 +334,9 @@ onMounted(async () => {
     console.error('Error loading settings:', error)
   }
 })
+definePageMeta({
+  middleware: ["auth"],
+});
 </script>
 
 <style scoped>

@@ -5,7 +5,7 @@ import { $api } from "~/composables/api";
 import { useCookie } from "#app";
 import {useCommonStore} from "~/stores/common.js";
 
-export const useRoleStore = defineStore("client", () => {
+export const useRoleStore = defineStore("role", () => {
     const Roles = ref([]);
     const isRoleLoading = ref(false);
     const selectedRole = ref(null);
@@ -30,14 +30,14 @@ export const useRoleStore = defineStore("client", () => {
     }
 
 
-    // Create new client
-    async function createRole(clientData) {
+    // Create new role
+    async function createRole(roleData) {
         common.validationError = null
 
         try {
             await $api("/api/admin/roles", {
                 method: "post",
-                body: clientData,
+                body: roleData,
                 headers: {
                     Authorization: `Bearer ${token.value}`,
                 },
@@ -51,7 +51,7 @@ export const useRoleStore = defineStore("client", () => {
                 common.validationError = err.data.errors;
                 toast.error("Validation failed.");
             } else {
-                toast.error("Failed to create client.");
+                toast.error("Failed to create role.");
             }
             return false;
 
@@ -59,7 +59,7 @@ export const useRoleStore = defineStore("client", () => {
 
     }
 
-    // Get a specific client
+    // Get a specific role
     async function getRole(id) {
         try {
             const { data, error } = await useApifetch(`/api/admin/roles/${id}`, {
@@ -68,14 +68,14 @@ export const useRoleStore = defineStore("client", () => {
                 },
             });
 
-            if (error.value) throw new Error("Failed to get client");
+            if (error.value) throw new Error("Failed to get role");
             selectedRole.value = data.value;
         } catch (err) {
-            toast.error("Could not fetch client details.");
+            toast.error("Could not fetch role details.");
         }
     }
 
-    // Update a client
+    // Update a role
     async function updateRole(id, updatedData) {
         common.validationError  = null;
         try {
@@ -94,11 +94,11 @@ export const useRoleStore = defineStore("client", () => {
                 common.validationError = err.data.errors;
                 toast.error("Validation failed.");
             } else {
-                toast.error("Failed to update client.");
+                toast.error("Failed to update role.");
             }
         }
     }
-    // Update a client
+    // Update a role
     async function updateRolePassword(id, updatedData) {
         common.validationError  = null;
         try {
@@ -116,12 +116,12 @@ export const useRoleStore = defineStore("client", () => {
                 common.validationError  = err.data.errors;
                 toast.error("Validation failed.");
             } else {
-                toast.error("Failed to update client password.");
+                toast.error("Failed to update role password.");
             }
         }
     }
 
-    // Delete a client
+    // Delete a role
     async function deleteRole(id) {
         try {
             await $api(`/api/admin/roles/${id}`, {
@@ -133,7 +133,7 @@ export const useRoleStore = defineStore("client", () => {
             toast.success("Role deleted");
             await fetchRoles();
         } catch (err) {
-            toast.error("Failed to delete client.");
+            toast.error("Failed to delete role.");
         }
     }
     async function restoreRole(id) {
@@ -147,7 +147,7 @@ export const useRoleStore = defineStore("client", () => {
             toast.success("Role restored");
             await fetchRoles();
         } catch (err) {
-            toast.error("Failed to restore client.");
+            toast.error("Failed to restore role.");
         }
     }
     async function forceDeleteRole(id) {
@@ -161,13 +161,13 @@ export const useRoleStore = defineStore("client", () => {
             toast.success("Role deleted");
             await fetchRoles();
         } catch (err) {
-            toast.error("Failed to delete client.");
+            toast.error("Failed to delete role.");
         }
     }
     // Toggle Active Status
     async function toggleActiveStatus(id) {
         try {
-            await $api(`/api/admin/${id}/toggle-active`, {
+            await $api(`/api/admin/roles/${id}/toggle-active`, {
                 method: "patch",
                 headers: {
                     Authorization: `Bearer ${token.value}`,
@@ -192,7 +192,7 @@ export const useRoleStore = defineStore("client", () => {
             })
             allPermissions.value = data
         } catch (e) {
-            toast.add({ title: 'Failed to fetch permissions', color: 'red' })
+            toast.error("Failed to fetch permissions");
         }
     }
 

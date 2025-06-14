@@ -312,13 +312,13 @@ const loginAsUser = async (id) => {
             <td class="py-4 px-6 text-right">
               <div class="flex items-center justify-end gap-2">
                 <!-- View Profile -->
-                <UButton
-                    icon="i-lucide-user"
-                    variant="ghost"
-                    size="sm"
-                    color="neutral"
-                    @click="loginAsUser(user.id)"
-                />
+<!--                <UButton-->
+<!--                    icon="i-lucide-user"-->
+<!--                    variant="ghost"-->
+<!--                    size="sm"-->
+<!--                    color="neutral"-->
+<!--                    @click="loginAsUser(user.id)"-->
+<!--                />-->
 
                 <!-- Edit (only show for non-deleted users) -->
                 <Nuxt-link :to="`${user.id}/edit`" >
