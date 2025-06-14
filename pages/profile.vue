@@ -14,16 +14,16 @@ const loadingPassword = ref(false)
 
 // Profile form
 const profileForm = reactive({
-  name: authStore.user.user.name || '',
-  email: authStore.user.user.email || '',
-  phone: authStore.user.user.phone || '',
-  gender: authStore.user.user.gender || '',
-  dob: authStore.user.user.dob || '',
-  country: authStore.user.user.country || '',
-  state: authStore.user.user.state || '',
-  city: authStore.user.user.city || '',
-  zipcode: authStore.user.user.zipcode || '',
-  address: authStore.user.user.address || '',
+  name: authStore.user.data.name || '',
+  email: authStore.user.data.email || '',
+  phone: authStore.user.data.phone || '',
+  gender: authStore.user.data.gender || '',
+  dob: authStore.user.data.dob || '',
+  country: authStore.user.data.country || '',
+  state: authStore.user.data.state || '',
+  city: authStore.user.data.city || '',
+  zipcode: authStore.user.data.zipcode || '',
+  address: authStore.user.data.address || '',
   avatar: null,
 })
 function handleAvatarUpload(event) {
@@ -74,6 +74,9 @@ const options = ref([
   { value: 'female', label: 'Female' },
   { value: 'other', label: 'Other' }
 ])
+definePageMeta({
+  middleware: ["auth"],
+});
 </script>
 <template>
   <MainLayout>

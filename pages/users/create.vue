@@ -1,42 +1,39 @@
 <template>
-
   <MainLayout>
-
     <Breadcrumb :items="breadcrumbItems" />
-    <div class="p-6 bg-white dark:bg-gray-800 shadow-md rounded-xl mt-5">
+
+    <!-- If user has permission -->
+    <div v-if="permissions.includes('users.create')" class="p-6 bg-white dark:bg-gray-800 shadow-md rounded-xl mt-5">
       <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Create New User</h2>
 
       <form @submit.prevent="createUser">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <!-- First Name -->
           <div>
-            <Input v-model="form.first_name" type="text"  label="First Name" />
-            <validation-error field="name" />
+            <Input v-model="form.first_name" type="text" label="First Name" />
+            <ValidationError field="name" />
           </div>
 
           <!-- Last Name -->
           <div>
-            <Input v-model="form.last_name" type="text"  label="Last Name" />
-
+            <Input v-model="form.last_name" type="text" label="Last Name" />
           </div>
 
           <!-- Email -->
           <div>
-            <Input v-model="form.email" type="email"  label="Email" />
-            <validation-error field="email" />
-
+            <Input v-model="form.email" type="email" label="Email" />
+            <ValidationError field="email" />
           </div>
 
           <!-- Password -->
           <div>
-            <Input v-model="form.password" type="password"  label="Password" />
-            <validation-error field="password" />
-
+            <Input v-model="form.password" type="password" label="Password" />
+            <ValidationError field="password" />
           </div>
 
           <!-- Login Status -->
           <div>
-            <label class="mb-1 text-[.82rem] font-medium text-gray-800 dark:text-gray-200">Login Status</label>
+            <label class="mb-1 text-sm font-medium text-gray-800 dark:text-gray-200">Login Status</label>
             <USelect
                 v-model="form.is_active"
                 :items="loginStatusOptions"
@@ -49,9 +46,9 @@
 
           <!-- Verify Email -->
           <div>
-            <label class="mb-1 text-[.82rem] font-medium text-gray-800 dark:text-gray-200">Verify Email</label>
+            <label class="mb-1 text-sm font-medium text-gray-800 dark:text-gray-200">Verify Email</label>
             <USelect
-                v-model="form.verify_email"
+                v-model="form.email_verified_at"
                 :items="verifyEmailOptions"
                 placeholder="Select Email Verification"
                 option-attribute="label"
@@ -61,18 +58,27 @@
           </div>
         </div>
 
-
-<div class="mt-5">
-  <PrimaryButton type="submit" :disabled="loading" :loading="loading">
-    Create user
-
-  </PrimaryButton>
-</div>
-
+        <!-- Submit Button -->
+        <div class="mt-5">
+          <PrimaryButton
+              type="submit"
+              :disabled="loading"
+              :loading="loading"
+          >
+            Create user
+          </PrimaryButton>
+        </div>
       </form>
+    </div>
+
+    <!-- If user does NOT have permission -->
+    <div  v-else>
+      <NoPermission />
+
     </div>
   </MainLayout>
 </template>
+
 
 <script setup>
 import MainLayout from "~/layouts/Dashboard/MainLayout.vue";
@@ -80,6 +86,12 @@ import Input from "~/components/Common/Input.vue";
 import Breadcrumb from "~/components/dashboard/Breadcrumb.vue";
 import PrimaryButton from "~/components/Common/PrimaryButton.vue";
 import ValidationError from "~/components/Common/ValidationError.vue";
+import NoPermission from  '@/components/Common/NoPermission.vue'
+
+import {computed} from "vue";
+ const  authStore = useAuthStore();
+
+const permissions = computed(() => authStore.user?.data?.permissions ?? []);
 
 const userStore = useUserStore()
 // All values must be valid, no empty strings
@@ -101,7 +113,7 @@ const form = reactive({
   password: "",
   password_confirmation: '',
   is_active: true,
-  verify_email: "yes",
+  email_verified_at: "yes",
 });
 
 const loading = ref(false);
@@ -137,4 +149,7 @@ const breadcrumbItems = [
   { label: 'Users Create', to: '/create' },
 
 ]
+definePageMeta({
+  middleware: ["auth"],
+});
 </script>

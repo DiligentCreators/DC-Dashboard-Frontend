@@ -346,7 +346,7 @@ watchEffect(() => {
                       icon="i-lucide-rotate-ccw"
                       variant="ghost"
                       size="sm"
-                      color="success"
+                      color="neutral"
                       @click="handleRestore(user.id)"
                       :loading="loading === user.id"
                   />

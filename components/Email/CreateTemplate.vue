@@ -5,7 +5,6 @@
       <Breadcrumb :items="breadcrumbItems" />
       <div class="flex items-center justify-between mt-4">
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Create New Email Template</h1>
-
       </div>
     </div>
 
@@ -41,8 +40,6 @@
           </div>
 
           <!-- Header/Footer Options -->
-
-
           <div class="space-y-4">
             <div class="flex items-center space-x-3">
               <input
@@ -278,22 +275,39 @@
                 placeholder="e.g. welcome_email"
                 :disabled="saving"
             />
-
             <p v-if="validationErrors?.key" class="text-sm text-red-500 mt-1">{{ validationErrors.key[0] }}</p>
           </div>
 
           <!-- Placeholders -->
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Placeholders</label>
-
             <textarea
-                :value="form.placeholders"
+                v-model="placeholderInput"
+                @input="formatPlaceholders"
+                @blur="formatPlaceholdersOnBlur"
                 rows="12"
                 class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white resize-none"
-                placeholder="Enter placeholders separated by commas"
+                placeholder="Enter placeholders separated by spaces or commas (e.g., name email phone address)"
                 :disabled="saving"
             ></textarea>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Tip: Use spaces or commas to separate placeholders. They will be automatically formatted.
+            </p>
             <p v-if="validationErrors?.placeholders" class="text-sm text-red-500 mt-1">{{ validationErrors.placeholders[0] }}</p>
+
+            <!-- Preview of parsed placeholders -->
+            <div v-if="form.placeholders.length > 0" class="mt-2 p-2 bg-gray-50 dark:bg-gray-700 rounded border">
+              <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Preview ({{ form.placeholders.length }} placeholders):</p>
+              <div class="flex flex-wrap gap-1">
+                <span
+                    v-for="placeholder in form.placeholders"
+                    :key="placeholder"
+                    class="inline-block px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded"
+                >
+                  {{ placeholder }}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -311,44 +325,29 @@
         >
           Save Template
         </UButton>
-
       </div>
     </div>
   </MainLayout>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { useToast } from '#imports'
-import { useRouter } from 'vue-router'
+import { ref, reactive, computed } from 'vue'
+
 import MainLayout from '~/layouts/Dashboard/MainLayout.vue'
 import Breadcrumb from '~/components/dashboard/Breadcrumb.vue'
 import { useEmailTemplateStore } from '~/stores/emailTemplate'
 import { useCommonStore } from '~/stores/common'
 
-// Toast, router, and stores
-const toast = useToast()
-const router = useRouter()
+
 const emailStore = useEmailTemplateStore()
 const commonStore = useCommonStore()
 
 // Breadcrumb
 const breadcrumbItems = [
   { label: 'Dashboard', to: '/dashboard' },
-  { label: 'Email Templates', to: '/email-templates' },
+  { label: 'Email Templates', to: 'email-templates' },
   { label: 'Create', to: '/email-templates/create' }
 ]
-function formatKey(event) {
-  const value = event.target.value
-      .toLowerCase()
-      .replace(/\s+/g, '_')         // Replace spaces with underscores
-      .replace(/[^a-z0-9_]/g, '')   // Remove all special characters except underscore
-      .replace(/_+/g, '_');         // Collapse multiple underscores into one
-
-  form.key = value;
-}
-
-
 
 // Form data
 const form = reactive({
@@ -356,26 +355,29 @@ const form = reactive({
   body: '',
   name: '',
   key: '',
-  placeholders: '',
+  placeholders: [],  // Changed to array
   createHeader: false,
   createFooter: false
 })
 
+// Placeholder input handling
+const placeholderInput = ref('')
+
 // Header form data
 const headerForm = reactive({
-  header_image: null,
-  header_text: '',
-  header_text_color: '#000000',
-  header_background_color: '#ffffff'
+  image: null,
+  headerText: '',
+  textColor: '#000000',
+  backgroundColor: '#ffffff'
 })
 
 // Footer form data
 const footerForm = reactive({
-  footer_image: null,
-  footer_bottom_image: null,
-  footer_text: '',
-  footer_text_color: '#ffffff',
-  footer_background_color: '#000000'
+  topImage: null,
+  bottomImage: null,
+  footerText: '',
+  textColor: '#ffffff',
+  backgroundColor: '#000000'
 })
 
 // UI state
@@ -388,11 +390,71 @@ const footerBottomImageInput = ref(null)
 const validationErrors = computed(() => commonStore.validationError)
 
 // Methods
+function formatKey(event) {
+  const value = event.target.value
+      .toLowerCase()
+      .replace(/\s+/g, '_')         // Replace spaces with underscores
+      .replace(/[^a-z0-9_]/g, '')   // Remove all special characters except underscore
+      .replace(/_+/g, '_');         // Collapse multiple underscores into one
+
+  form.key = value;
+}
+
+function formatPlaceholders(event) {
+  const value = event.target.value
+
+  // Just update the input value without formatting
+  placeholderInput.value = value
+
+  // Parse placeholders for the form data (split by spaces or commas)
+  const placeholders = value
+      .split(/[\s,]+/)       // Split by spaces or commas
+      .map(p => p.trim())    // Trim each placeholder
+      .filter(p => p)        // Remove empty strings
+
+  // Update the form with array of placeholders
+  form.placeholders = placeholders
+}
+
+// Add a function to format on blur (when user finishes typing)
+function formatPlaceholdersOnBlur() {
+  if (form.placeholders.length > 0) {
+    const formattedValue = form.placeholders.join(',')
+    placeholderInput.value = formattedValue
+  }
+}
+function resetForm() {
+  form.subject = ''
+  form.body = ''
+  form.name = ''
+  form.key = ''
+  form.placeholders = []
+  form.createHeader = false
+  form.createFooter = false
+
+  placeholderInput.value = ''
+
+  headerForm.image = null
+  headerForm.headerText = ''
+  headerForm.textColor = '#000000'
+  headerForm.backgroundColor = '#ffffff'
+
+  footerForm.topImage = null
+  footerForm.bottomImage = null
+  footerForm.footerText = ''
+  footerForm.textColor = '#ffffff'
+  footerForm.backgroundColor = '#000000'
+
+  // Also reset file inputs if you are using <input type="file" ref="">
+  if (headerImageInput.value) headerImageInput.value.value = null
+  if (footerTopImageInput.value) footerTopImageInput.value.value = null
+  if (footerBottomImageInput.value) footerBottomImageInput.value.value = null
+}
 const saveTemplate = async () => {
   saving.value = true
-  commonStore.validationError = null // Clear previous errors
+  commonStore.validationError = null
 
-  // Prepare FormData for logging
+  // Prepare FormData
   const formData = new FormData()
   formData.append('subject', form.subject)
   formData.append('body', form.body)
@@ -401,13 +463,16 @@ const saveTemplate = async () => {
   formData.append('header', form.createHeader)
   formData.append('footer', form.createFooter)
 
-  formData.append('placeholders', form.placeholders ? form.placeholders.split(',').map(p => p.trim()).filter(p => p).join(',') : '')
+  // Send placeholders as JSON string array for backend
+  formData.append('placeholders', JSON.stringify(form.placeholders))
+
   if (form.createHeader) {
     formData.append('header_text', headerForm.headerText)
     formData.append('header_text_color', headerForm.textColor)
     formData.append('header_background_color', headerForm.backgroundColor)
     if (headerForm.image) formData.append('header_image', headerForm.image)
   }
+
   if (form.createFooter) {
     formData.append('footer_text', footerForm.footerText)
     formData.append('footer_text_color', footerForm.textColor)
@@ -417,7 +482,12 @@ const saveTemplate = async () => {
   }
 
   try {
-    await emailStore.createTemplate(form, headerForm, footerForm)
+
+  const isSuccess =  await emailStore.createTemplate(form, headerForm, footerForm)
+    if (isSuccess) {
+      resetForm()
+
+    }
   } catch (error) {
     console.error('Error saving template:', error)
   } finally {
@@ -445,6 +515,7 @@ const handleFooterBottomImageUpload = (event) => {
     footerForm.bottomImage = file
   }
 }
+
 
 // SEO
 useHead({

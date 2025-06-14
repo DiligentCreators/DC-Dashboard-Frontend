@@ -28,7 +28,7 @@ const pageSize = ref(10)
 
 // Get client list with mapped properties
 const data = computed(() => {
-  return roleStore.Roles.map(role => ({
+  return roleStore.Roles?.map(role => ({
     ...role,
     is_deleted: role.deleted_at !== null
   }))

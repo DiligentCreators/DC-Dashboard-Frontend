@@ -1,14 +1,11 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import MainLayout from '~/layouts/Dashboard/MainLayout.vue'
+import { useRoute } from 'vue-router'
 import { useRoleStore } from '~/stores/role'
 import { useToast } from '#imports'
 import { useCommonStore } from '~/stores/common'
-import PrimaryButton from '~/components/Common/PrimaryButton.vue'
-
+import MainLayout from "~/layouts/Dashboard/MainLayout.vue";
 const route = useRoute()
-const router = useRouter()
 const id = route.params.id
 const roleStore = useRoleStore()
 const commonStore = useCommonStore()
@@ -16,22 +13,21 @@ const toast = useToast()
 
 const loadingRole = ref(false)
 const loadingPermissions = ref(false)
-const loading = ref(false)
 
-// Permission options
+// Permission types and resources
 const permissionTypes = ['list', 'create', 'read', 'update', 'delete', 'restore', 'force.delete']
-const resources = ref([]) // Will be populated from backend data
+const resources = ref([])
 
-// Form data
+// Form state
 const form = reactive({
   name: '',
-  permissions: {} // Will be in format: { resource: { permissionType: boolean } }
+  permissions: {} // matrix: { USERS: { read: true, update: false, ... } }
 })
 
-// Computed validation errors
+// Validation errors from store
 const validationErrors = computed(() => commonStore.validationError)
 
-// Parse permission name from backend (e.g., "clients.list" => { resource: "clients", type: "list" })
+// Parse permission string (e.g. "users.read" => { resource: "USERS", type: "read" })
 const parsePermissionName = (permissionName) => {
   const [resource, ...typeParts] = permissionName.split('.')
   return {
@@ -40,17 +36,16 @@ const parsePermissionName = (permissionName) => {
   }
 }
 
-// Convert backend permissions to our matrix format
-const convertBackendPermissions = (backendPermissions) => {
+// Convert backend permission array to matrix
+const convertBackendPermissions = (rolePermissions = []) => {
   const matrix = {}
+  const allPermissions = roleStore.allPermissions || []
 
-  // First collect all unique resources from permissions
   const uniqueResources = [...new Set(
-      backendPermissions.map(p => parsePermissionName(p.name).resource)
+      allPermissions.map(p => parsePermissionName(p.name).resource)
   )]
   resources.value = uniqueResources
 
-  // Initialize matrix with all permissions set to false
   uniqueResources.forEach(resource => {
     matrix[resource] = {}
     permissionTypes.forEach(type => {
@@ -58,8 +53,7 @@ const convertBackendPermissions = (backendPermissions) => {
     })
   })
 
-  // Set true for permissions that exist in backend
-  backendPermissions.forEach(permission => {
+  rolePermissions.forEach(permission => {
     const { resource, type } = parsePermissionName(permission.name)
     if (matrix[resource] && type in matrix[resource]) {
       matrix[resource][type] = true
@@ -69,20 +63,30 @@ const convertBackendPermissions = (backendPermissions) => {
   return matrix
 }
 
-// Load role data
+// Convert matrix back to backend array
+const convertMatrixToBackendPermissions = (matrix) => {
+  const result = []
+  Object.entries(matrix).forEach(([resource, types]) => {
+    Object.entries(types).forEach(([type, allowed]) => {
+      if (allowed) {
+        result.push(`${resource.toLowerCase()}.${type}`)
+      }
+    })
+  })
+  return result
+}
+
+// Fetch role and permissions
 onMounted(async () => {
   loadingRole.value = true
   try {
+    await roleStore.fetchAllPermissions()
     await roleStore.getRole(id)
-    if (roleStore.selectedRole?.data) {
-      form.name = roleStore.selectedRole.data.name
 
-      if (roleStore.selectedRole.data.permissions) {
-        form.permissions = convertBackendPermissions(roleStore.selectedRole.data.permissions)
-      } else {
-        // Initialize empty if no permissions exist
-        form.permissions = {}
-      }
+    const role = roleStore.selectedRole?.data
+    if (role) {
+      form.name = role.name || ''
+      form.permissions = convertBackendPermissions(role.permissions || [])
     }
   } catch (error) {
     console.error('Error loading role:', error)
@@ -100,56 +104,80 @@ const updateRole = async () => {
       name: form.name
     })
     if (isSuccess) {
-      toast.add({ title: 'Role name updated successfully', color: 'green' })
+      toast.add({ title: 'Role name updated', color: 'green' })
     }
   } catch (error) {
-    console.error(error)
-    toast.add({ title: error.response?.data?.message || 'Failed to update role', color: 'red' })
+    toast.add({ title: error?.response?.data?.message || 'Failed to update role name', color: 'red' })
   } finally {
     loadingRole.value = false
   }
 }
-
-// Update permissions - convert our format back to backend format
 const updatePermissions = async () => {
   loadingPermissions.value = true
   try {
-    // Convert our matrix format to backend format
-    const permissionsToUpdate = []
+    // 1. Get list of selected permission names
+    const selectedPermissionNames = []
+
     Object.keys(form.permissions).forEach(resource => {
       Object.keys(form.permissions[resource]).forEach(type => {
         if (form.permissions[resource][type]) {
-          permissionsToUpdate.push(`${resource.toLowerCase()}.${type}`)
+          selectedPermissionNames.push(`${resource.toLowerCase()}.${type}`)
         }
       })
     })
 
+    // 2. Convert selected names to IDs using allPermissions
+    const allPermissions = roleStore.allPermissions || []
+    const permissionIds = allPermissions
+        .filter(p => selectedPermissionNames.includes(p.name))
+        .map(p => p.id)
+
+    if (!form.name) {
+      throw new Error("Role name is required.")
+    }
+
     const isSuccess = await roleStore.updateRole(id, {
-      permissions: permissionsToUpdate
+      name: form.name, // Include name to avoid 'name required' error
+      permissions: permissionIds
     })
 
     if (isSuccess) {
-
+      toast.add({ title: 'Permissions updated successfully', color: 'green' })
     }
   } catch (error) {
     console.error(error)
-    toast.add({ title: error.response?.data?.message || 'Failed to update permissions', color: 'red' })
+    toast.add({
+      title: error.response?.data?.message || 'Failed to update permissions',
+      color: 'red'
+    })
   } finally {
     loadingPermissions.value = false
   }
 }
 
-// Handle permission change
+
+// Toggle permission value
 const handlePermissionChange = (resource, type) => {
   if (!form.permissions[resource]) {
     form.permissions[resource] = {}
   }
   form.permissions[resource][type] = !form.permissions[resource][type]
 }
+definePageMeta({
+  middleware: ["auth"],
+});
+const  authStore = useAuthStore();
+import NoPermission from  '@/components/Common/NoPermission.vue'
+const permissions = computed(() => authStore.user?.data?.permissions ?? []);
+
 </script>
+
 
 <template>
   <MainLayout>
+
+    <div v-if="permissions.includes('roles.update')">
+
     <!-- Role Name Card -->
     <div class="p-6 bg-white dark:bg-gray-800 shadow-lg rounded-xl mt-6 border border-gray-200 dark:border-gray-700">
       <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Update Role Name</h2>
@@ -163,63 +191,64 @@ const handlePermissionChange = (resource, type) => {
                 type="text"
                 required
                 placeholder="Enter role name"
-                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                class="w-full"
                 :disabled="loadingRole"
             />
-            <p v-if="validationErrors?.name" class="text-sm text-red-500 mt-1">{{ validationErrors.name[0] }}</p>
+            <p v-if="validationErrors?.name" class="text-sm text-red-500 mt-1">
+              {{ validationErrors.name[0] }}
+            </p>
           </div>
         </div>
 
-        <div class="">
-          <UButton
-              type="submit"
-              color="neutral"
-              size="md"
-              :disabled="loadingRole"
-              :loading="loadingRole"
-          >
-            Update Role Name
-          </UButton>
-        </div>
+        <UButton
+            type="submit"
+            color="neutral"
+            size="md"
+            :disabled="loadingRole"
+            :loading="loadingRole"
+        >
+          Update Role Name
+        </UButton>
       </form>
     </div>
 
     <!-- Permissions Card -->
-    <div class="p-6 bg-white dark:bg-gray-800 shadow-lg rounded-xl mt-6 border border-gray-200 dark:border-gray-700">
+
+      <div class="p-6 bg-white dark:bg-gray-800 shadow-lg rounded-xl mt-6 border border-gray-200 dark:border-gray-700">
       <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Update Permissions</h2>
 
       <form @submit.prevent="updatePermissions">
         <!-- Permissions Table -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
-          <div class="grid grid-cols-[200px_repeat(7,1fr)] sm:grid-cols-[120px_repeat(7,1fr)] gap-px bg-gray-200 dark:bg-gray-700">
-            <!-- Header Row -->
-            <div class="bg-gray-100 dark:bg-gray-600 p-4 text-left font-bold text-sm uppercase text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
-              Resources
+        <div class="overflow-auto mb-6 border border-gray-200 dark:border-gray-700 rounded-lg">
+          <div class="grid min-w-[700px] grid-cols-[160px_repeat(7,minmax(80px,1fr))] gap-px bg-gray-200 dark:bg-gray-700">
+            <!-- Header -->
+            <div class="bg-gray-100 dark:bg-gray-600 p-4 font-bold text-sm uppercase text-gray-700 dark:text-gray-300 border">
+              Resource
             </div>
             <div
                 v-for="type in permissionTypes"
                 :key="type"
-                class="bg-gray-100 dark:bg-gray-600 p-4 text-center font-bold text-sm uppercase text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700"
+                class="bg-gray-100 dark:bg-gray-600 p-4 text-center font-bold text-sm uppercase text-gray-700 dark:text-gray-300 border"
             >
-              {{ type.toUpperCase() }}
+              {{ type }}
             </div>
 
-            <!-- Data Rows -->
+            <!-- Permission Matrix Rows -->
             <template v-for="resource in resources" :key="resource">
-              <div class="bg-gray-100 dark:bg-gray-600 p-4 text-left font-medium text-sm text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 flex items-center">
+              <div class="bg-gray-100 dark:bg-gray-600 p-4 font-medium text-sm text-gray-700 dark:text-gray-300 border">
                 {{ resource }}
               </div>
               <div
                   v-for="type in permissionTypes"
                   :key="`${resource}-${type}`"
-                  class="bg-white dark:bg-gray-800 p-4 flex justify-center items-center border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  class="bg-white dark:bg-gray-800 p-4 flex justify-center items-center border hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
                 <input
                     type="checkbox"
                     :id="`${resource}-${type}`"
                     :checked="form.permissions[resource]?.[type] || false"
                     @change="handlePermissionChange(resource, type)"
-                    class="w-5 h-5 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded accent-blue-600 hover:accent-blue-500 cursor-pointer focus:ring-2 focus:ring-blue-500"
+                    class="w-5 h-5 text-blue-600 rounded accent-blue-600 focus:ring focus:ring-blue-500"
                     :disabled="loadingPermissions"
                 />
               </div>
@@ -227,7 +256,9 @@ const handlePermissionChange = (resource, type) => {
           </div>
         </div>
 
-        <p v-if="validationErrors?.permissions" class="text-sm text-red-500 mt-2 mb-6">{{ validationErrors.permissions[0] }}</p>
+        <p v-if="validationErrors?.permissions" class="text-sm text-red-500 mt-2 mb-4">
+          {{ validationErrors.permissions[0] }}
+        </p>
 
         <div class="flex justify-end">
           <UButton
@@ -242,5 +273,10 @@ const handlePermissionChange = (resource, type) => {
         </div>
       </form>
     </div>
+    </div>
+
+      <div v-else>
+    <NoPermission />
+  </div>
   </MainLayout>
 </template>

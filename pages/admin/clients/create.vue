@@ -3,7 +3,7 @@
   <MainLayout>
 
     <Breadcrumb :items="breadcrumbItems" />
-    <div class="p-6 bg-white dark:bg-gray-800 shadow-md rounded-xl mt-5">
+    <div v-if="permissions.includes('clients.create')" class="p-6 bg-white dark:bg-gray-800 shadow-md rounded-xl mt-5">
       <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Create New Client</h2>
 
       <form @submit.prevent="createClient">
@@ -51,7 +51,7 @@
           <div>
             <label class="mb-1 text-[.82rem] font-medium text-gray-800 dark:text-gray-200">Verify Email</label>
             <USelect
-                v-model="form.verify_email"
+                v-model="form.email_verified_at"
                 :items="verifyEmailOptions"
                 placeholder="Select Email Verification"
                 option-attribute="label"
@@ -70,6 +70,7 @@
 
       </form>
     </div>
+    <NoPermission v-else/>
   </MainLayout>
 </template>
 
@@ -101,7 +102,7 @@ const form = reactive({
   password: "",
   password_confirmation: '',
   is_active: true,
-  verify_email: "yes",
+  email_verified_at: "yes",
 });
 
 const loading = ref(false);
@@ -140,4 +141,11 @@ const breadcrumbItems = [
   { label: 'Client Create', to: '/clients/create' },
 
 ]
+definePageMeta({
+  middleware: ["auth"],
+});
+const  authStore = useAuthStore();
+import NoPermission from  '@/components/Common/NoPermission.vue'
+const permissions = computed(() => authStore.user?.data?.permissions ?? []);
+
 </script>

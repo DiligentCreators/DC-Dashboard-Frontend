@@ -1,15 +1,20 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import {ref, onMounted, computed} from 'vue'
 import { useRoute } from 'vue-router'
 import { useToast } from '#imports'
 import Input from '~/components/Common/Input.vue'
 import Breadcrumb from '~/components/dashboard/Breadcrumb.vue'
 import MainLayout from '~/layouts/Dashboard/MainLayout.vue'
 import ValidationError from "~/components/Common/ValidationError.vue";
+import Multiselect from 'vue-multiselect'
+import 'vue-multiselect/dist/vue-multiselect.min.css'
+definePageMeta({
+  middleware: ["auth"],
+});
 const loading = ref(false)
 const breadcrumbItems = [
   { label: 'Dashboard', to: '/dashboard' },
-  { label: 'User List', to: '/admin/user' },
+  { label: 'User List', to: '/users/list' },
   { label: 'User Edit', to: '/users/edit' }
 ]
 
@@ -23,6 +28,7 @@ const form = ref({
   username: '',
   email: '',
   firstName: '',
+  selectedRole: null,
   lastName: '',
   gender: null,
   dateOfBirth: null,
@@ -31,7 +37,8 @@ const form = ref({
   city: '',
   zipCode: '',
   emailVerified: false,
-  suspended: false
+  suspended: false,
+
 })
 onMounted(async () => {
   try {
@@ -41,6 +48,7 @@ onMounted(async () => {
     const user = clientData.data
     const profile = user.profile || {}
 
+    // Initialize form with user data including roles
     form.value = {
       id: user.id,
       username: user.username || '',
@@ -54,14 +62,17 @@ onMounted(async () => {
       city: profile.city || '',
       zipCode: profile.zipcode || '',
       emailVerified: !!user.email_verified_at,
-      suspended: user.is_suspended || false
+      suspended: user.is_suspended || false,
+      selectedRole: roleStore.Roles.find(role => role.name === user.roles?.[0]?.name) || null
     }
+
+    // Also fetch all available roles
+    await roleStore.fetchRoles();
   } catch (error) {
     toast.add({ title: 'Failed to load client data', color: 'error' })
     console.error('User fetch error:', error)
   }
 })
-
 const activeTab = ref('profile')
 
 const setActiveTab = (tab) => {
@@ -85,6 +96,8 @@ const saveChanges = async () => {
       name: `${form.value.firstName} ${form.value.lastName}`,
       email_verified_at: form.value.emailVerified ? new Date().toISOString() : null,
       is_suspended: form.value.suspended,
+      role: form.value.selectedRole?.name,
+
 
       // Profile data should be nested if your API expects it
 
@@ -137,13 +150,24 @@ const suspendUser = async (user) => {
 
   }
 };
+const roleStore = useRoleStore()
+
+onMounted(async () => {
+ await roleStore.fetchRoles();
+})
+
+
+const  authStore = useAuthStore();
+
+const permissions = computed(() => authStore.user?.data?.permissions ?? []);
+import NoPermission from  '@/components/Common/NoPermission.vue'
 </script>
 
 <template>
   <MainLayout>
     <Breadcrumb :items="breadcrumbItems" />
 
-    <div>
+    <div v-if="permissions.includes('users.update')">
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-12">
         <div class="text-4xl mb-4">⏳</div>
@@ -345,6 +369,19 @@ const suspendUser = async (user) => {
                           class="w-full"
                       />
                     </div>
+
+                    <div>
+                      <label class="typo__label">Roles</label>
+                      <multiselect
+                          id="option-groups"
+                          v-model="form.selectedRole"
+                          :options="roleStore.Roles"
+                          :track-by="'id'"
+                          :label="'name'"
+                          placeholder="Select a role"
+                      />
+
+                    </div>
                   </div>
                 </div>
               </div>
@@ -389,7 +426,13 @@ const suspendUser = async (user) => {
           </div>
         </div>
       </div>
+    </div v-if>
+
+    <div v-else >
+      <NoPermission />
     </div>
+
+
   </MainLayout>
 </template>
 

@@ -6,7 +6,7 @@
       <h1 class="text-2xl font-bold mb-4">Admin Overview {{auth.loginAdminAsUser?.name || 'unkonwon'  }}</h1>
     </div>
     <div v-else>
-      <h1 class="text-2xl font-bold mb-4">Admin Overview {{ auth.user?.user?.name || 'unkonwon' }}</h1>
+      <h1 class="text-2xl font-bold mb-4">Admin Overview {{ auth.user.data?.name || 'unkonwon' }}</h1>
     </div>
 
 

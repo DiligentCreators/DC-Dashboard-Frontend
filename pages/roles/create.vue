@@ -3,7 +3,7 @@
   <MainLayout>
 
     <Breadcrumb :items="breadcrumbItems" />
-    <div class="p-6 bg-white dark:bg-gray-800 shadow-md rounded-xl mt-5">
+    <div v-if="permissions.includes('roles.create')" class="p-6 bg-white dark:bg-gray-800 shadow-md rounded-xl mt-5">
       <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Create New Role</h2>
 
       <form @submit.prevent="createClient">
@@ -21,6 +21,8 @@
         </PrimaryButton>
       </form>
     </div>
+
+    <NoPermission v-else/>
   </MainLayout>
 </template>
 
@@ -37,7 +39,9 @@ const loading = ref(false);
 
 
 const form = reactive({
-  name: ''
+  name: '',
+  guard_name: 'web'
+
 });
 
 const createClient = async () => {
@@ -59,4 +63,10 @@ const breadcrumbItems = [
   { label: 'Roles Create', to: '/roles/create' },
 
 ]
+definePageMeta({
+  middleware: ["auth"],
+});
+const  authStore = useAuthStore();
+import NoPermission from  '@/components/Common/NoPermission.vue'
+const permissions = computed(() => authStore.user?.data?.permissions ?? []);
 </script>
