@@ -96,6 +96,16 @@
         </div>
       </template>
     </nav>
+    <UButton
+        color="error"
+        variant="solid"
+        @click="leaveImpersonation"
+        :loading="loading"
+        :disabled="loading"
+    >
+      Back to Admin
+    </UButton>
+
   </aside>
 </template>
 <script setup>
@@ -104,6 +114,14 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 const authStore = useAuthStore()
 
+const loading = ref(false)
+
+
+ const  leaveImpersonation =async () => {
+   loading.value = true
+  await authStore.leaveImpersonation()
+   loading.value = false
+ }
 defineProps({ isOpen: Boolean })
 defineEmits(['close'])
 
@@ -190,12 +208,12 @@ const rawMenu = [
         icon: 'lucide:user-plus',
         permissions: ['email-templates.create']
       },
-      {
-        label: 'Global Header & Footer',
-        to: '/email/global-email-templates',
-        icon: 'lucide:shield-check',
-        permissions: ['global-email-templates.list']
-      }
+      // {
+      //   label: 'Global Header & Footer',
+      //   to: '/email/global-email-templates',
+      //   icon: 'lucide:shield-check',
+      //   permissions: ['global-email-templates.list']
+      // }
     ]
   }
 ]

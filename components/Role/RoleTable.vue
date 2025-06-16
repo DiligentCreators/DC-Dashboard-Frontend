@@ -3,8 +3,9 @@ import { ref, computed, onMounted } from 'vue'
 import Breadcrumb from '~/components/dashboard/Breadcrumb.vue'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
+const  authStore = useAuthStore()
 
-
+const permissions = computed(() => authStore.user?.data?.permissions ?? []);
 // Store and toast
 const roleStore = useRoleStore()
 
@@ -189,11 +190,10 @@ watchEffect(() => {
 
 
           <!-- Filter Deleted -->
-          <!-- Filter Deleted -->
           <select v-model="filters.deleted" class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-            <option value="">Active Users</option>
-            <option value="deleted">Deleted Users</option>
-            <option value="all">All Users</option>
+            <option value="">Active Roles</option>
+            <option value="deleted">Deleted Roles</option>
+            <option value="all">All Roles</option>
           </select>
         </div>
       </div>
@@ -256,6 +256,8 @@ watchEffect(() => {
                 <!-- Edit (only show for non-deleted users) -->
                 <Nuxt-link v-if="!user.deleted_at" :to="`${user.id}/edit`">
                   <UButton
+                      v-if="permissions.includes('roles.update')"
+
                       icon="i-lucide-edit"
                       variant="ghost"
                       size="sm"
@@ -266,6 +268,8 @@ watchEffect(() => {
                 <!-- Delete/Restore/Force Delete -->
                 <template v-if="!user.deleted_at">
                   <UButton
+                      v-if="permissions.includes('roles.delete')"
+
                       icon="i-lucide-trash-2"
                       variant="ghost"
                       size="sm"
@@ -276,6 +280,8 @@ watchEffect(() => {
                 </template>
                 <template v-else>
                   <UButton
+                      v-if="permissions.includes('roles.restore')"
+
                       icon="i-lucide-rotate-ccw"
                       variant="ghost"
                       size="sm"
@@ -284,6 +290,8 @@ watchEffect(() => {
                       :loading="loading === user.id"
                   />
                   <UButton
+                      v-if="permissions.includes('roles.force.delete')"
+
                       icon="i-lucide-trash-2"
                       variant="ghost"
                       size="sm"

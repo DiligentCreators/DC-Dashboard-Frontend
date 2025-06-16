@@ -9,8 +9,9 @@ export const useAuthStore = defineStore("auth", () => {
     const common = useCommonStore();
     const user = ref(null);
     const isAdmin = ref(false);
-    const loginAdminAsUser = ref(null); // for real admin
+    const loginAdminAsUser = ref(null);
     const token = useCookie("auth_token");
+    const isImpersonating = ref(false)
 
     const isLoggedIn = computed(() => !!user.value);
 
@@ -42,7 +43,6 @@ export const useAuthStore = defineStore("auth", () => {
             return false;
         }
     }
-
 
     async function attemptLogin(data) {
         try {
@@ -102,11 +102,10 @@ export const useAuthStore = defineStore("auth", () => {
         if (payload.city) formData.append('city', payload.city);
         if (payload.state) formData.append('state', payload.state);
         if (payload.country) formData.append('country', payload.country);
-        if (payload.zip_code) formData.append('zip_code', payload.zip_code);
+        if (payload.zipcode) formData.append('zipcode', payload.zipcode);
         if (payload.gender) formData.append('gender', payload.gender);
-        if (payload.date_of_birth) formData.append('date_of_birth', payload.date_of_birth);
-        if (payload.image) formData.append('image', payload.image);
-
+        if (payload.dob) formData.append('dob', payload.dob);
+        if (payload.avatar) formData.append('avatar', payload.avatar);
         formData.append('_method', 'PUT');
 
         try {
@@ -161,19 +160,20 @@ export const useAuthStore = defineStore("auth", () => {
 
         }
     }
-
-
-
     // fetchUser expects a token string
     async function fetchUser(token) {
         if (!token) {
             resetAuthState();
             return;
         }
+
         try {
             isAuthLoading.value = true;
+
             const { data, error } = await useApifetch("/api/user", {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
             });
 
             if (error.value || !data.value) {
@@ -181,7 +181,9 @@ export const useAuthStore = defineStore("auth", () => {
                 resetAuthState();
                 return;
             }
+
             user.value = data.value;
+
         } catch (err) {
             console.error("Exception in fetchUser:", err);
             resetAuthState();
@@ -199,6 +201,7 @@ export const useAuthStore = defineStore("auth", () => {
                     headers: { Authorization: `Bearer ${token}` },
                 });
             }
+
         } catch (err) {
             console.error("Logout error:", err);
         } finally {
@@ -209,32 +212,115 @@ export const useAuthStore = defineStore("auth", () => {
             window.location.href = "/login";
         }
     }
-    async function getLoginAsUser(id) {
-        try {
-            const token = useCookie("auth_token");
 
-            const response = await $api(`/api/admin/impersonate/${id}`, {
-                method: 'get',
-                credentials: 'include',
+    const impersonateUser = async (userId) => {
+        const token = useCookie("auth_token")?.value;
+
+        try {
+            const response = await $api(`/api/admin/impersonate/${userId}`, {
+                method: 'GET',
                 headers: {
-                    Authorization: `Bearer ${token.value}`,
-                }
+                    Authorization: `Bearer ${token}`,
+                },
             });
 
-            // Update state with impersonated user
-            loginAdminAsUser.value = response.impersonated_user;
-            // toast.success(response.message || "Logged in as user.");
+            await fetchUser(token);
+            isImpersonating.value = true
 
-            navigateTo("/dashboard");
+            toast.success('Now impersonating user');
+            navigateTo('/dashboard');
+        } catch (error) {
+            console.error('Failed to impersonate user:', error);
+            toast.error('Could not impersonate user.');
+        }
+        finally {
+            isImpersonating.value = false
 
+        }
+    };
+    const leaveImpersonation = async () => {
+        const token = useCookie("auth_token")?.value;
+
+        try {
+            const response = await $api(`/api/admin/impersonate/stop`, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            await fetchUser(token);
+            toast.success(response.message || 'Returned to admin');
+            navigateTo('/dashboard');
+        } catch (error) {
+            console.error('Failed to leave impersonation:', error);
+            toast.error('Could not return to admin.');
+        }
+    };
+
+
+
+    async function sendPasswordResetEmail(email) {
+        common.validationError = null;
+        common.Invalid = null;
+
+        try {
+            await $api("/api/auth/forgot-password", {
+                method: "post",
+                body: { email },
+            });
+
+            toast.success("Password reset link sent. Please check your inbox or spam folder.");
+            return true;
         } catch (err) {
-            console.error(err);
-            toast.error("Could not impersonate user.");
+            if (err.status === 422) {
+                common.validationError = err.data.errors;
+            } else {
+                toast.error("Something went wrong. Try again later.");
+            }
+            return false;
+        }
+    }
+    async function verifyResetCode(payload) {
+
+        common.validationError = null;
+        try {
+            await $api("/api/reset-password", {
+                method: "post",
+                body: payload,
+            });
+
+            toast.success("Password reset successfully!");
+            return navigateTo("/login");
+        } catch (err) {
+            if (err.status === 422) {
+                common.validationError = err.data.errors;
+            } else {
+                toast.error("Reset failed. Please try again.");
+            }
+            return false;
         }
     }
 
 
-
+    async function resetPassword(data) {
+        common.validationError = null;
+        try {
+            await $api("/api/auth/reset-password", {
+                method: "post",
+                body: data,
+            });
+            toast.success("Password has been reset successfully.");
+        } catch (err) {
+            if (err.status === 422) {
+                common.validationError = err.data.errors;
+                toast.error("Please correct the errors.");
+            } else {
+                toast.error("Failed to reset password.");
+            }
+            throw err;
+        }
+    }
 
 
 
@@ -248,7 +334,11 @@ export const useAuthStore = defineStore("auth", () => {
     }
 
     return {
-        getLoginAsUser,
+        leaveImpersonation,
+        resetPassword,
+        verifyResetCode,
+        sendPasswordResetEmail,
+        impersonateUser,
         user,
         isLoggedIn,
         loginAdminAsUser,
@@ -261,5 +351,6 @@ export const useAuthStore = defineStore("auth", () => {
         resetAuthState,
         updateProfile,
         updatePassword,
+        isImpersonating,
     };
 });

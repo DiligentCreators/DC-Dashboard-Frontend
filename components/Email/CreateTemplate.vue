@@ -1,5 +1,4 @@
 <template>
-  <MainLayout>
     <!-- Header Card -->
     <div class="mb-6">
       <Breadcrumb :items="breadcrumbItems" />
@@ -27,17 +26,20 @@
           </div>
 
           <!-- Email Body Field -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email Body</label>
-            <textarea
-                v-model="form.body"
-                rows="12"
-                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white resize-none"
-                placeholder="Enter email body content"
-                :disabled="saving"
-            ></textarea>
-            <p v-if="validationErrors?.body" class="text-sm text-red-500 mt-1">{{ validationErrors.body[0] }}</p>
-          </div>
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Email Body</label>
+
+              <div class="quill-wrapper bg-white dark:bg-gray-700  rounded-lg">
+                <QuillEditor
+                    v-model:content="form.body"
+                    contentType="html"
+                    class="quill-editor"
+                    style="min-height: 250px"
+                />
+              </div>
+            </div>
+
+
 
           <!-- Header/Footer Options -->
           <div class="space-y-4">
@@ -327,13 +329,12 @@
         </UButton>
       </div>
     </div>
-  </MainLayout>
 </template>
 
 <script setup>
 import { ref, reactive, computed } from 'vue'
 
-import MainLayout from '~/layouts/Dashboard/MainLayout.vue'
+
 import Breadcrumb from '~/components/dashboard/Breadcrumb.vue'
 import { useEmailTemplateStore } from '~/stores/emailTemplate'
 import { useCommonStore } from '~/stores/common'

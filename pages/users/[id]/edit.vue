@@ -19,7 +19,6 @@ const breadcrumbItems = [
 ]
 
 const route = useRoute()
-const toast = useToast()
 const userStore = useUserStore()
 const id = route.params.id
 
@@ -28,7 +27,7 @@ const form = ref({
   username: '',
   email: '',
   firstName: '',
-  selectedRole: null,
+  selectedRoles: [],
   lastName: '',
   gender: null,
   dateOfBirth: null,
@@ -63,16 +62,20 @@ onMounted(async () => {
       zipCode: profile.zipcode || '',
       emailVerified: !!user.email_verified_at,
       suspended: user.is_suspended || false,
-      selectedRole: roleStore.Roles.find(role => role.name === user.roles?.[0]?.name) || null
+      selectedRoles: roleStore.Roles.filter(role =>
+          user.roles?.some(userRole => userRole.name === role.name)
+      )
     }
 
     // Also fetch all available roles
     await roleStore.fetchRoles();
   } catch (error) {
-    toast.add({ title: 'Failed to load client data', color: 'error' })
     console.error('User fetch error:', error)
   }
 })
+
+
+
 const activeTab = ref('profile')
 
 const setActiveTab = (tab) => {
@@ -80,27 +83,39 @@ const setActiveTab = (tab) => {
 }
 
 const loginAsUser = () => {
-  toast.add({ title: `Logged in as ${form.value.username} (simulated)`, color: 'success' })
 }
 
-const markEmailAsVerified = () => {
-  form.value.emailVerified = true
-  toast.add({ title: 'Email marked as verified', color: 'success' })
+const loadingToggle = ref(false)
+const clientStore = useClientStore()
+const markEmailAsVerified = async () => {
+  loadingToggle.value = true
+  try {
+    await clientStore.toggleEmail(id)
+    form.emailVerified = !form.emailVerified
+  } catch (error) {
+    console.error(error)
+  } finally {
+    loadingToggle.value = false
+  }
 }
 
 const saveChanges = async () => {
   try {
+    console.log("Selected Roles:", form.value.selectedRoles);
+
+    const roleNames = Array.isArray(form.value.selectedRoles)
+        ? form.value.selectedRoles.map(role => role.name)
+        : [];
+
+    console.log("Role Names to send:", roleNames);
+
     const submitData = {
       username: form.value.username,
       email: form.value.email,
       name: `${form.value.firstName} ${form.value.lastName}`,
       email_verified_at: form.value.emailVerified ? new Date().toISOString() : null,
       is_suspended: form.value.suspended,
-      role: form.value.selectedRole?.name,
-
-
-      // Profile data should be nested if your API expects it
-
+      roles: roleNames, // ✅ use safe roleNames
       profile: {
         gender: form.value.gender,
         dob: form.value.dateOfBirth,
@@ -110,6 +125,7 @@ const saveChanges = async () => {
         zipcode: form.value.zipCode,
       }
     };
+
     await userStore.updateUser(id, submitData);
   } catch (error) {
     console.error('Failed to update client:', error);
@@ -218,9 +234,9 @@ import NoPermission from  '@/components/Common/NoPermission.vue'
                   variant="outline"
                   size="sm"
                   @click="markEmailAsVerified"
-                  :disabled="form.emailVerified"
+                  :loading="loadingToggle"
               >
-                Mark Email As Verified
+                {{ form.emailVerified ? 'Mark Email As UnVerified' : 'Mark Email As Verified' }}
               </UButton>
               <UButton
                   color="error"
@@ -374,12 +390,14 @@ import NoPermission from  '@/components/Common/NoPermission.vue'
                       <label class="typo__label">Roles</label>
                       <multiselect
                           id="option-groups"
-                          v-model="form.selectedRole"
+                          v-model="form.selectedRoles"
                           :options="roleStore.Roles"
-                          :track-by="'id'"
+                          :track-by="'name'"
                           :label="'name'"
-                          placeholder="Select a role"
+                          :multiple="true"
+                           placeholder="Select roles"
                       />
+
 
                     </div>
                   </div>
@@ -426,7 +444,7 @@ import NoPermission from  '@/components/Common/NoPermission.vue'
           </div>
         </div>
       </div>
-    </div v-if>
+    </div>
 
     <div v-else >
       <NoPermission />

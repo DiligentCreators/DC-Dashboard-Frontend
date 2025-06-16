@@ -6,7 +6,7 @@ import 'nprogress/nprogress.css'
 
 // Store and toast
 const userStore = useUserStore()
-const toast = useToast()
+const permissions = computed(() => authStore.user?.data?.permissions ?? []);
 
 // Table Columns (remove type annotations)
 const columns = [
@@ -311,18 +311,13 @@ const loginAsUser = async (id) => {
             <!-- Actions -->
             <td class="py-4 px-6 text-right">
               <div class="flex items-center justify-end gap-2">
-                <!-- View Profile -->
-<!--                <UButton-->
-<!--                    icon="i-lucide-user"-->
-<!--                    variant="ghost"-->
-<!--                    size="sm"-->
-<!--                    color="neutral"-->
-<!--                    @click="loginAsUser(user.id)"-->
-<!--                />-->
+
 
                 <!-- Edit (only show for non-deleted users) -->
                 <Nuxt-link :to="`${user.id}/edit`" >
                   <UButton
+                      v-if="permissions.includes('users.update')"
+
                       icon="i-lucide-edit"
                       variant="ghost"
                       size="sm"
@@ -332,7 +327,10 @@ const loginAsUser = async (id) => {
 
                 <!-- Delete/Restore/Force Delete -->
                 <template v-if="!user.deleted_at">
+
                   <UButton
+                      v-if="permissions.includes('users.delete')"
+
                       icon="i-lucide-trash-2"
                       variant="ghost"
                       size="sm"
@@ -343,6 +341,8 @@ const loginAsUser = async (id) => {
                 </template>
                 <template v-else>
                   <UButton
+                      v-if="permissions.includes('users.restore')"
+
                       icon="i-lucide-rotate-ccw"
                       variant="ghost"
                       size="sm"
@@ -351,6 +351,8 @@ const loginAsUser = async (id) => {
                       :loading="loading === user.id"
                   />
                   <UButton
+                      v-if="permissions.includes('users.force.delete')"
+
                       icon="i-lucide-trash-2"
                       variant="ghost"
                       size="sm"

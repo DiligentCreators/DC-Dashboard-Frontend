@@ -88,10 +88,21 @@ const loginAsClient = () => {
   toast.add({ title: `Logged in as ${form.value.username} (simulated)`, color: 'success' })
 }
 
-const markEmailAsVerified = () => {
-  form.value.emailVerified = true
-  toast.add({ title: 'Email marked as verified', color: 'success' })
+const loadingToggle = ref(false)
+
+const markEmailAsVerified = async () => {
+  loadingToggle.value = true
+  try {
+    await clientStore.toggleEmail(id)
+    form.emailVerified = !form.emailVerified
+  } catch (error) {
+    console.error(error)
+  } finally {
+    loadingToggle.value = false
+  }
 }
+
+
 
 const suspendClient = async (user) => {
   try {
@@ -209,10 +220,12 @@ const permissions = computed(() => authStore.user?.data?.permissions ?? []);
                   variant="outline"
                   size="sm"
                   @click="markEmailAsVerified"
-                  :disabled="form.emailVerified"
+                  :loading="loadingToggle"
               >
-                Mark Email As Verified
+                {{ form.emailVerified ? 'Mark Email As UnVerified' : 'Mark Email As Verified' }}
               </UButton>
+
+
 
               <UButton
                   color="error"

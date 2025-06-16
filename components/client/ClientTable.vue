@@ -4,11 +4,11 @@ import Breadcrumb from '~/components/dashboard/Breadcrumb.vue'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 
-
 // Store and toast
 const clientStore = useClientStore()
 const  authStore = useAuthStore()
-// Table Columns (remove type annotations)
+const permissions = computed(() => authStore.user?.data?.permissions ?? []);
+
 const columns = [
   { accessorKey: 'id', header: '#' },
   { accessorKey: 'name', header: 'NAME' },
@@ -145,7 +145,7 @@ const handleForceDelete = async (id) => {
 const loginAsUser = async (id) => {
   loading.value = id
   try {
-    await authStore.getLoginAsUser(id)
+    await authStore.impersonateUser(id)
   } catch (error) {
   } finally {
     loading.value = false
@@ -323,6 +323,7 @@ watchEffect(() => {
                 <!-- Edit (only show for non-deleted users) -->
                 <Nuxt-link v-if="!user.deleted_at" :to="`clients/${user.id}/edit`">
                   <UButton
+                      v-if="permissions.includes('clients.update')"
                       icon="i-lucide-edit"
                       variant="ghost"
                       size="sm"
@@ -333,6 +334,8 @@ watchEffect(() => {
                 <!-- Delete/Restore/Force Delete -->
                 <template v-if="!user.deleted_at">
                   <UButton
+                      v-if="permissions.includes('clients.delete')"
+
                       icon="i-lucide-trash-2"
                       variant="ghost"
                       size="sm"
@@ -343,6 +346,8 @@ watchEffect(() => {
                 </template>
                 <template v-else>
                   <UButton
+                      v-if="permissions.includes('clients.restore')"
+
                       icon="i-lucide-rotate-ccw"
                       variant="ghost"
                       size="sm"
@@ -351,6 +356,7 @@ watchEffect(() => {
                       :loading="loading === user.id"
                   />
                   <UButton
+                      v-if="permissions.includes('clients.force.delete')"
                       icon="i-lucide-trash-2"
                       variant="ghost"
                       size="sm"
