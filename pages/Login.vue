@@ -24,9 +24,8 @@
       </div>
 
       <p v-if="common.Invalid" class="text-red-500 h-5">{{ common.Invalid }}</p>
-
       <div class="text-sm">
-        <a href="#" class="text-blue-500 hover:underline">Forgot password?</a>
+        <Nuxt-link to="/forgot-password" class="text-blue-500 hover:underline">Forgot password?</Nuxt-link>
       </div>
 
       <div class="space-y-5 space-x-5">

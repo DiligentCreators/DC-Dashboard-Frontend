@@ -1,11 +1,19 @@
 <template>
 
   <MainLayout>
-<EmailTemplates />
+<EmailTemplates v-if="permissions.includes('email-templates.list')"/>
+    <NoPermission v-else/>
   </MainLayout>
 </template>
 
 <script setup>
+
+import {computed} from "vue";
+
+const  authStore = useAuthStore()
+const permissions = computed(() => authStore.user?.data?.permissions ?? []);
+import NoPermission from  '@/components/Common/NoPermission.vue'
+
 definePageMeta({
   middleware: ["auth"],
 });

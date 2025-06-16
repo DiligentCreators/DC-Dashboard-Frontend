@@ -101,8 +101,8 @@ const loginStatusOptions = [
 ];
 
 const verifyEmailOptions = [
-  { label: "Email Verification Required", value: "yes" },
-  { label: "Email Verification Not Required", value: "no" },
+  { label: "Email Verification Required", value: "no" },
+  { label: "Email Verification Not Required", value: "yes" },
 ];
 
 const form = reactive({

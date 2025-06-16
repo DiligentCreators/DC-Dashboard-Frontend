@@ -16,16 +16,17 @@ const loadingPassword = ref(false)
 const profileForm = reactive({
   name: authStore.user.data.name || '',
   email: authStore.user.data.email || '',
-  phone: authStore.user.data.phone || '',
-  gender: authStore.user.data.gender || '',
-  dob: authStore.user.data.dob || '',
-  country: authStore.user.data.country || '',
-  state: authStore.user.data.state || '',
-  city: authStore.user.data.city || '',
-  zipcode: authStore.user.data.zipcode || '',
-  address: authStore.user.data.address || '',
   avatar: null,
+  gender: authStore.user.data.profile.gender || '',
+  dob: authStore.user.data.profile.dob || '',
+  phone: authStore.user.data.profile.phone || '',
+  country: authStore.user.data.profile.country || '',
+  state: authStore.user.data.profile.state || '',
+  city: authStore.user.data.profile.city || '',
+  zipcode: authStore.user.data.profile.zipcode || '',
+  address: authStore.user.data.profile.address || ''
 })
+
 function handleAvatarUpload(event) {
   const file = event.target.files[0];
   if (file) {
@@ -41,7 +42,6 @@ const passwordForm = reactive({
 
 const updateProfile = async () => {
   loading.value = true
-  console.log('click')
   try {
     await authStore.updateProfile(profileForm)
   } catch (err) {

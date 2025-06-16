@@ -5,6 +5,7 @@ import { useCookie } from '#app'
 import { useCommonStore } from '~/stores/common'
 import { useRouter } from 'vue-router'
 import { toast } from "vue3-toastify";
+import {ref} from "vue";
 
 export const useEmailTemplateStore = defineStore('email', () => {
     const token = useCookie('auth_token')
@@ -12,7 +13,7 @@ export const useEmailTemplateStore = defineStore('email', () => {
 
     const templates = ref([])
     const isLoading = ref(false)
-
+    const selectedTemplate = ref(null);
     async function getTemplates() {
         isLoading.value = true
         common.validationError = null
@@ -132,12 +133,31 @@ export const useEmailTemplateStore = defineStore('email', () => {
             toast.error("Failed to delete Email Template.");
         }
     }
+    // Get a specific role
+    async function getTemplate(id) {
+        try {
+            const { data, error } = await useApifetch(`/api/admin/email-templates/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${token.value}`,
+                },
+            });
+
+            if (error.value) throw new Error("Failed to get role");
+            selectedTemplate.value = data.value;
+        } catch (err) {
+            toast.error("Could not fetch role details.");
+        }
+    }
+
+
 
     return {
         forceDeleteTemplate,
         createTemplate,
         getTemplates,
+        getTemplate,
         templates,
-        isLoading
+        isLoading,
+        selectedTemplate,
     }
 })

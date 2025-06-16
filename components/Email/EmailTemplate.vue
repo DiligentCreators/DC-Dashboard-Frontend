@@ -66,7 +66,8 @@
 
           <!-- Edit Button -->
           <NuxtLink
-              :to="`/email/edit/${template.id}`"
+              v-if="permissions.includes('email-templates.update')"
+              :to="`/email/${template.id}/edit`"
               class="flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800"
           >
             <Icon name="i-lucide-pencil-line" class="w-4 h-4" />
@@ -75,6 +76,8 @@
 
           <!-- Delete Button -->
           <UButton
+              v-if="permissions.includes('email-templates.delete')"
+
               icon="i-lucide-trash-2"
               variant="ghost"
               size="sm"
@@ -92,8 +95,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 
+const  authStore = useAuthStore()
+const permissions = computed(() => authStore.user?.data?.permissions ?? []);
+
+
 const emailStore = useEmailTemplateStore()
-const toast = useToast()
 const search = ref('')
 
 onMounted(() => {

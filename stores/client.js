@@ -194,8 +194,23 @@ export const useClientStore = defineStore("client", () => {
     }
 
 
+    async function toggleEmail(id) {
+        try {
+            await $api(`/api/admin/${id}/toggle-email-verified`, {
+                method: "patch",
+                headers: {
+                    Authorization: `Bearer ${token.value}`,
+                },
+            });
+            toast.success("Successfully toggled email status.");
+        } catch (err) {
+            toast.error("Failed to toggle email status.");
+            throw err;
+        }
+    }
 
     return {
+        toggleEmail,
         toggleActiveStatus,
         toggleSuspendedStatus,
         clients,

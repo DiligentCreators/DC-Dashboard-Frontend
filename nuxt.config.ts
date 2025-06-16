@@ -4,6 +4,9 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ["@nuxt/icon", "@nuxt/ui", "@nuxtjs/tailwindcss", "@pinia/nuxt"],
   css: ["~/assets/css/main.css"],
+  plugins: [
+    { src: '~/plugins/vue3-quill.js', mode: 'client' }
+  ],
   ui: {
     colorMode: true,
   },
