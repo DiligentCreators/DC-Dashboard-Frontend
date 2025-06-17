@@ -4,9 +4,7 @@
       <UserTable />
     </div>
 
-    <div
-        v-else
-       >
+    <div v-else >
       <NoPermission />
     </div>
   </MainLayout>
@@ -26,4 +24,7 @@ const permissions = computed(() => authStore.user?.data?.permissions ?? []);
 definePageMeta({
   middleware: ["auth"],
 });
+useHead({
+  title: 'Dashboard - Users List',
+})
 </script>

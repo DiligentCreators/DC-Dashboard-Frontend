@@ -14,5 +14,8 @@
 definePageMeta({
   middleware: ["auth"],
 });
+useHead({
+  title: 'Dashboard - Global-Email Templates',
+})
 import MainLayout from "~/layouts/Dashboard/MainLayout.vue";
 </script>

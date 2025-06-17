@@ -147,5 +147,7 @@ definePageMeta({
 const  authStore = useAuthStore();
 import NoPermission from  '@/components/Common/NoPermission.vue'
 const permissions = computed(() => authStore.user?.data?.permissions ?? []);
-
+useHead({
+  title: 'Dashboard - Create Client',
+})
 </script>

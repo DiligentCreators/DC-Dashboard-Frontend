@@ -81,6 +81,9 @@
 
 
 <script setup>
+useHead({
+  title: 'Dashboard - Create User',
+})
 import MainLayout from "~/layouts/Dashboard/MainLayout.vue";
 import Input from "~/components/Common/Input.vue";
 import Breadcrumb from "~/components/dashboard/Breadcrumb.vue";

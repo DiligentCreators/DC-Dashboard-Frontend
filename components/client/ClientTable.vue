@@ -1,8 +1,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import Breadcrumb from '~/components/dashboard/Breadcrumb.vue'
-import NProgress from 'nprogress'
-import 'nprogress/nprogress.css'
+// import NProgress from 'nprogress'
+// import 'nprogress/nprogress.css'
 
 // Store and toast
 const clientStore = useClientStore()
@@ -151,13 +151,13 @@ const loginAsUser = async (id) => {
     loading.value = false
   }
 }
-watchEffect(() => {
-  if (loading.value) {
-    NProgress.start()
-  } else {
-    NProgress.done()
-  }
-})
+// watchEffect(() => {
+//   if (loading.value) {
+//     NProgress.start()
+//   } else {
+//     NProgress.done()
+//   }
+// })
 </script>
 
 <template>

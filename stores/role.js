@@ -32,7 +32,8 @@ export const useRoleStore = defineStore("role", () => {
 
     // Create new role
     async function createRole(roleData) {
-        common.validationError = null
+        common.setValidationError(null);
+
 
         try {
             await $api("/api/admin/roles", {
@@ -48,7 +49,7 @@ export const useRoleStore = defineStore("role", () => {
 
         } catch (err) {
             if (err.status === 422) {
-                common.validationError = err.data.errors;
+                common.setValidationError(err.data.errors);
                 toast.error("Validation failed.");
             } else {
                 toast.error("Failed to create role.");
@@ -77,7 +78,8 @@ export const useRoleStore = defineStore("role", () => {
 
     // Update a role
     async function updateRole(id, updatedData) {
-        common.validationError  = null;
+                        common.setValidationError(null);
+
         try {
             await $api(`/api/admin/roles/${id}`, {
                 method: "put",
@@ -91,7 +93,7 @@ export const useRoleStore = defineStore("role", () => {
 
         } catch (err) {
             if (err.status === 422) {
-                common.validationError = err.data.errors;
+                common.setValidationError(err.data.errors);
                 toast.error("Validation failed.");
             } else {
                 toast.error("Failed to update role.");
@@ -100,7 +102,8 @@ export const useRoleStore = defineStore("role", () => {
     }
     // Update a role
     async function updateRolePassword(id, updatedData) {
-        common.validationError  = null;
+                        common.setValidationError(null);
+
         try {
             await $api(`/api/admin/roles/${id}/update-password`, {
                 method: "put",
@@ -113,7 +116,7 @@ export const useRoleStore = defineStore("role", () => {
             await fetchRoles();
         } catch (err) {
             if (err.status === 422) {
-                common.validationError  = err.data.errors;
+                common.setValidationError(err.data.errors);
                 toast.error("Validation failed.");
             } else {
                 toast.error("Failed to update role password.");

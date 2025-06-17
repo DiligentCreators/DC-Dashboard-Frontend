@@ -27,6 +27,9 @@
 </template>
 
 <script setup>
+useHead({
+  title: 'Dashboard - Create Role',
+})
 import MainLayout from "~/layouts/Dashboard/MainLayout.vue";
 import Input from "~/components/Common/Input.vue";
 import Breadcrumb from "~/components/dashboard/Breadcrumb.vue";

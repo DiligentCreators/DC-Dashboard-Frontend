@@ -9,7 +9,9 @@
 definePageMeta({
   middleware: ["auth"],
 });
-
+useHead({
+  title: 'Dashboard - Roles List',
+})
 const  authStore = useAuthStore();
 import NoPermission from  '@/components/Common/NoPermission.vue'
 const permissions = computed(() => authStore.user?.data?.permissions ?? []);

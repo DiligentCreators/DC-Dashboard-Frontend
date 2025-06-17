@@ -123,7 +123,7 @@
 <script setup>
 // Meta tags for SEO
 useHead({
-  title: 'DashboardPro - Next Generation Admin Platform',
+  title: 'Dashboard - Next Generation Admin Platform',
   meta: [
     { name: 'description', content: 'Experience the future of digital management with our next-generation admin platform' }
   ]

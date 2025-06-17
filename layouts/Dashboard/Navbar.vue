@@ -7,19 +7,22 @@
     <!-- Right controls -->
     <div class="flex items-center gap-4">
       <!-- Dark/Light Mode -->
-      <button
-          @click="toggleDark"
-          aria-label="Toggle dark mode"
-          class="relative w-14 h-8 rounded-full transition-colors duration-300 focus:outline-none"
-          :class="isDark ? 'bg-gray-700' : 'bg-yellow-300'"
-      >
-        <span
-            class="absolute left-1 top-1 w-6 h-6 rounded-full bg-white shadow-md transform transition-transform duration-300"
-            :class="isDark ? 'translate-x-6' : 'translate-x-0'"
+      <ClientOnly>
+        <button
+            @click="toggleDark"
+            aria-label="Toggle dark mode"
+            class="relative w-14 h-8 rounded-full transition-colors duration-300 focus:outline-none"
+            :class="isDark ? 'bg-gray-700' : 'bg-yellow-300'"
         >
-          <Icon :name="isDark ? 'line-md:moon-filled-alt-to-sunny-filled-loop-transition' : 'line-md:sunny-filled-loop-to-moon-filled-transition'" class="w-6 h-6 text-yellow-500 dark:text-gray-300" />
-        </span>
-      </button>
+    <span
+        class="absolute left-1 top-1 w-6 h-6 rounded-full bg-white shadow-md transform transition-transform duration-300"
+        :class="isDark ? 'translate-x-6' : 'translate-x-0'"
+    >
+      <Icon :name="isDark ? 'line-md:moon-filled-alt-to-sunny-filled-loop-transition' : 'line-md:sunny-filled-loop-to-moon-filled-transition'" class="w-6 h-6 text-yellow-500 dark:text-gray-300" />
+    </span>
+        </button>
+      </ClientOnly>
+
 
       <!-- Notification Icon -->
       <button @click="showNotification = !showNotification" class="relative text-gray-600 dark:text-gray-300 hover:text-blue-500">
@@ -30,9 +33,14 @@
       <!-- Profile Dropdown -->
       <div  class="relative">
         <button @click="dropdownOpen = !dropdownOpen" class="flex items-center gap-1">
-          <img src="https://i.pravatar.cc/40" alt="Avatar" class="w-8 h-8 rounded-full border-2 border-gray-300 dark:border-gray-600" />
+          <UAvatar
+              :src="auth.user.data.profile?.avatar || `https://i.pravatar.cc/120?u=${auth.user.data.id}`"
+              size="sm"
+              :alt="`${auth.user.data.name}'s avatar`"
+          />
           <Icon name="heroicons:chevron-down" class="w-4 h-4 text-gray-500 dark:text-gray-300" />
         </button>
+
 
         <div v-if="dropdownOpen" class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 shadow-lg rounded-md py-2 z-50">
           <NuxtLink

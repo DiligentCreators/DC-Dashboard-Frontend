@@ -17,6 +17,9 @@ import NoPermission from  '@/components/Common/NoPermission.vue'
 definePageMeta({
   middleware: ["auth"],
 });
+useHead({
+  title: 'Dashboard - Email Templates',
+})
 import EmailTemplates from '@/components/Email/EmailTemplate.vue'
 import MainLayout from "~/layouts/Dashboard/MainLayout.vue";
 </script>

@@ -33,7 +33,7 @@ export const useClientStore = defineStore("client", () => {
 
     // Create new client
     async function createClient(clientData) {
-        errors.value = null;
+        common.setValidationError(null);
         try {
             await $api("/api/admin/users", {
                 method: "post",
@@ -48,7 +48,7 @@ export const useClientStore = defineStore("client", () => {
 
         } catch (err) {
             if (err.status === 422) {
-                common.validationError = err.data.errors;
+                common.setValidationError(err.data.errors);
                 toast.error("Validation failed.");
             } else {
                 toast.error("Failed to create client.");
@@ -76,7 +76,7 @@ export const useClientStore = defineStore("client", () => {
 
     // Update a client
     async function updateClient(id, updatedData) {
-        common.validationError  = null;
+        common.setValidationError(null);
         try {
             await $api(`/api/admin/users/${id}`, {
                 method: "put",
@@ -89,7 +89,7 @@ export const useClientStore = defineStore("client", () => {
             await fetchClients();
         } catch (err) {
             if (err.status === 422) {
-                common.validationError = err.data.errors;
+                common.setValidationError(err.data.errors);
                 toast.error("Validation failed.");
             } else {
                 toast.error("Failed to update client.");
@@ -98,7 +98,8 @@ export const useClientStore = defineStore("client", () => {
     }
     // Update a client
     async function updateClientPassword(id, updatedData) {
-        common.validationError  = null;
+        common.setValidationError(null);
+
         try {
             await $api(`/api/admin/users/${id}/update-password`, {
                 method: "put",
@@ -111,7 +112,7 @@ export const useClientStore = defineStore("client", () => {
             await fetchClients();
         } catch (err) {
             if (err.status === 422) {
-                common.validationError  = err.data.errors;
+                common.setValidationError(err.data.errors);
                 toast.error("Validation failed.");
             } else {
                 toast.error("Failed to update client password.");

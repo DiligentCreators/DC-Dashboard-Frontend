@@ -97,11 +97,13 @@
       </template>
     </nav>
     <UButton
+        v-if="authStore.user?.data.is_impersonating"
         color="error"
         variant="solid"
         @click="leaveImpersonation"
         :loading="loading"
         :disabled="loading"
+
     >
       Back to Admin
     </UButton>

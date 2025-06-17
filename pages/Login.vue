@@ -29,6 +29,9 @@
       </div>
 
       <div class="space-y-5 space-x-5">
+        <PrimaryButton type="button" :disabled="loading" :loading="loading" @click="handleLogin('login')">
+          Login
+        </PrimaryButton>
         <PrimaryButton type="button" :disabled="loading" :loading="loading" @click="handleLogin('user')">
           Login as User
         </PrimaryButton>
@@ -85,6 +88,9 @@ const handleLogin = async (type) => {
     form.email = 'staff@dc.com.pk';
     form.password = '123456789';
   }
+  else if (type === 'login') {
+
+  }
 
   try {
     await auth.attemptLogin(form);
@@ -98,4 +104,7 @@ const handleLogin = async (type) => {
 definePageMeta({
   middleware: ["guest"],
 });
+useHead({
+  title: 'Login',
+})
 </script>
