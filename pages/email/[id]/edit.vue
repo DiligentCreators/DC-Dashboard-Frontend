@@ -344,6 +344,9 @@ onMounted(() => {
   emailTemplateStore.getTemplate(id)
 })
 
+useHead({
+  title: 'Dashboard - Edit Email',
+})
 import MainLayout from '~/layouts/Dashboard/MainLayout.vue'
 import Breadcrumb from '~/components/dashboard/Breadcrumb.vue'
 import { useEmailTemplateStore } from '~/stores/emailTemplate'

@@ -77,6 +77,10 @@ const options = ref([
 definePageMeta({
   middleware: ["auth"],
 });
+
+useHead({
+  title: 'Dashboard - Profile',
+})
 </script>
 <template>
   <MainLayout>

@@ -33,6 +33,11 @@
 </template>
 
 <script setup>
+
+
+useHead({
+  title: 'Reset Password',
+})
 import { useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { useCommonStore } from "@/stores/common";
@@ -51,18 +56,21 @@ const loading = ref(false);
 
 // Token from URL (e.g. ?token=abc123)
 const token = route.query.token || "";
+const email = route.query.email;
 
 const form = reactive({
   password: "",
   password_confirmation: "",
   token: token,
+  email: email,
+
 });
 
 const handleResetPassword = async () => {
   loading.value = true;
 
   try {
-    await auth.resetPassword(form); // Send form object
+    await auth.resetPassword(form);
     await navigateTo("/login");
   } catch (error) {
     console.error(error);

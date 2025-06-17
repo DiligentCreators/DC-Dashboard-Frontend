@@ -53,9 +53,9 @@ const handleForgotPassword = async () => {
   try {
     const success = await auth.sendPasswordResetEmail(form.email);
     if (success) {
-      await navigateTo({
-        path: "/verify-code",
-      });
+      // await navigateTo({
+      //   path: "/verify-code",
+      // });
     }
   } catch (error) {
     console.error(error);
@@ -68,4 +68,7 @@ const handleForgotPassword = async () => {
 definePageMeta({
   middleware: ["guest"],
 });
+useHead({
+  title: 'Forgot Password',
+})
 </script>

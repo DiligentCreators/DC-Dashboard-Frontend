@@ -11,32 +11,42 @@ export const useAuthStore = defineStore("auth", () => {
     const isAdmin = ref(false);
     const loginAdminAsUser = ref(null);
     const token = useCookie("auth_token");
-    const isImpersonating = ref(false)
 
     const isLoggedIn = computed(() => !!user.value);
-
+    // attemptRegister
     async function attemptRegister(data) {
         try {
-            // Clear previous errors
-            common.validationError = null;
+            common.setValidationError(null);
 
-            // Ensure CSRF token is set
             await $api(`/sanctum/csrf-cookie`);
 
-            // Attempt registration
-            await $api(`/api/auth/register`, {
+            const response = await $api(`/api/auth/register`, {
                 method: "post",
                 body: data,
             });
-            toast.success("Registration completed successfully!");
-            return true;
+
+            const token = response.data?.token;
+
+            if (token) {
+                const tokenCookie = useCookie("auth_token", {
+                    maxAge: 60 * 15,
+                    sameSite: "lax",
+                    secure: false,
+                });
+
+                tokenCookie.value = token;
+
+                toast.success("Registered successfully! Please verify your code.");
+                return navigateTo("/verify-code");
+            }
+
+            toast.error("Unexpected response. Please try again.");
+            return false;
         } catch (err) {
             if (err.status === 422) {
-                // Handle validation errors
-                common.validationError = err.data.errors;
+                common.setValidationError(err.data.errors);
                 toast.error("Please review the form and fix the errors.");
             } else {
-                // Handle unexpected errors
                 toast.error("Registration failed. Please try again later.");
             }
 
@@ -46,7 +56,7 @@ export const useAuthStore = defineStore("auth", () => {
 
     async function attemptLogin(data) {
         try {
-            common.validationError = null;
+            common.setValidationError(null);
             common.Invalid = null;
 
             await $api(`/sanctum/csrf-cookie`);
@@ -54,12 +64,11 @@ export const useAuthStore = defineStore("auth", () => {
                 body: data,
                 method: "post",
                 headers: {
-                    Authorization: `Bearer ${token.value}`
-                }
+                    Authorization: `Bearer ${token.value}`,
+                },
             });
 
             if (response.data?.access_token) {
-                // Set cookie with secure: false for localhost (adjust for production)
                 const tokenCookie = useCookie("auth_token", {
                     maxAge: 60 * 60 * 24,
                     sameSite: "lax",
@@ -68,27 +77,23 @@ export const useAuthStore = defineStore("auth", () => {
 
                 tokenCookie.value = response.data.access_token;
 
-                // Pass token explicitly to fetchUser
                 await fetchUser(response.data.access_token);
                 return navigateTo("/dashboard", { replace: true });
-
             }
-        }catch (err) {
+        } catch (err) {
             if (err.status === 422) {
-                common.validationError = err.data.errors;
+                common.setValidationError(err.data.errors);
                 toast.error("Please correct the highlighted fields.");
             } else if (err.status === 400 || err.status === 401) {
                 common.Invalid = err.data.message;
                 toast.error(common.Invalid || "Invalid request.");
-            }
-            else {
+            } else {
                 toast.error("An unexpected error occurred. Please try again later.");
             }
-
             throw err;
         }
-
     }
+    // updateProfile
     async function updateProfile(payload) {
         const token = useCookie("auth_token"); // Get the token from cookies
 
@@ -123,7 +128,7 @@ export const useAuthStore = defineStore("auth", () => {
         } catch (err) {
             if (err.status === 422) {
                 // Handle validation errors
-                common.validationError = err.data.errors;
+                common.setValidationError(err.data.errors);
                 toast.error("Please review the form and fix the errors.");
             } else {
                 // Handle unexpected errors
@@ -133,7 +138,7 @@ export const useAuthStore = defineStore("auth", () => {
             throw error;
         }
     }
-
+    // updatePassword
     async function updatePassword(updatedData) {
         const token = useCookie("auth_token");
 
@@ -151,7 +156,7 @@ export const useAuthStore = defineStore("auth", () => {
             return true;
         } catch (err) {
             if (err.status === 422) {
-                common.validationError  = err.data.errors;
+                common.setValidationError(err.data.errors);
                 toast.error("Validation failed.");
             } else {
                 toast.error("Failed to auth password.");
@@ -176,7 +181,7 @@ export const useAuthStore = defineStore("auth", () => {
                 },
             });
 
-            if (error.value || !data.value) {
+            if (error.value || !data.value || !data.value.data.email_verified_at) {
                 toast.error("Failed to fetch user");
                 resetAuthState();
                 return;
@@ -191,7 +196,7 @@ export const useAuthStore = defineStore("auth", () => {
             isAuthLoading.value = false;
         }
     }
-
+    // logout
     async function logout() {
         try {
             const token = useCookie("auth_token").value;
@@ -212,7 +217,7 @@ export const useAuthStore = defineStore("auth", () => {
             window.location.href = "/login";
         }
     }
-
+    // impersonateUser
     const impersonateUser = async (userId) => {
         const token = useCookie("auth_token")?.value;
 
@@ -225,7 +230,6 @@ export const useAuthStore = defineStore("auth", () => {
             });
 
             await fetchUser(token);
-            isImpersonating.value = true
 
             toast.success('Now impersonating user');
             navigateTo('/dashboard');
@@ -233,11 +237,9 @@ export const useAuthStore = defineStore("auth", () => {
             console.error('Failed to impersonate user:', error);
             toast.error('Could not impersonate user.');
         }
-        finally {
-            isImpersonating.value = false
 
-        }
     };
+
     const leaveImpersonation = async () => {
         const token = useCookie("auth_token")?.value;
 
@@ -257,63 +259,49 @@ export const useAuthStore = defineStore("auth", () => {
             toast.error('Could not return to admin.');
         }
     };
-
-
-
+    // sendPasswordResetEmail
     async function sendPasswordResetEmail(email) {
-        common.validationError = null;
+        common.setValidationError(null);
         common.Invalid = null;
 
         try {
-            await $api("/api/auth/forgot-password", {
+            const response = await $api("/api/auth/forgot-password", {
                 method: "post",
                 body: { email },
             });
 
-            toast.success("Password reset link sent. Please check your inbox or spam folder.");
+            const token = response.data;
+            // Redirect to reset-password page with token and email in query
+            navigateTo(`/reset-password?token=${token}&email=${encodeURIComponent(email)}`);
             return true;
         } catch (err) {
             if (err.status === 422) {
-                common.validationError = err.data.errors;
+                common.setValidationError(err.data.errors);
             } else {
                 toast.error("Something went wrong. Try again later.");
             }
             return false;
         }
     }
-    async function verifyResetCode(payload) {
-
-        common.validationError = null;
-        try {
-            await $api("/api/reset-password", {
-                method: "post",
-                body: payload,
-            });
-
-            toast.success("Password reset successfully!");
-            return navigateTo("/login");
-        } catch (err) {
-            if (err.status === 422) {
-                common.validationError = err.data.errors;
-            } else {
-                toast.error("Reset failed. Please try again.");
-            }
-            return false;
-        }
-    }
-
-
+    // resetPassword
     async function resetPassword(data) {
-        common.validationError = null;
+        common.setValidationError(null);
+
         try {
             await $api("/api/auth/reset-password", {
                 method: "post",
-                body: data,
+                body: {
+                    token: data.token,
+                    email: data.email,
+                    password: data.password,
+                    password_confirmation: data.password_confirmation,
+                },
             });
+
             toast.success("Password has been reset successfully.");
         } catch (err) {
             if (err.status === 422) {
-                common.validationError = err.data.errors;
+                common.setValidationError(err.data.errors);
                 toast.error("Please correct the errors.");
             } else {
                 toast.error("Failed to reset password.");
@@ -324,16 +312,76 @@ export const useAuthStore = defineStore("auth", () => {
 
 
 
+    // verifyResetCode
+    async function verifyResetCode(code) {
+        const token = useCookie("auth_token").value;
+        common.setValidationError(null);
+
+        try {
+            await $api("/api/auth/verification", {
+                method: "post",
+                body: { code },
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            // Clear token after successful verification
+            useCookie("auth_token").value = null;
+
+            toast.success("Code verified successfully! Please log in.");
+            return navigateTo("/login");
+
+        } catch (err) {
+            if (err.status === 422) {
+                // Set specific validation error message
+                const errorMsg = err.data.errors?.code?.[0] || "Invalid code.";
+                common.setValidationError(errorMsg);
+            } else if (err.status === 401) {
+                // Token expired or not valid
+                common.setValidationError("Session expired. Please request a new verification code.");
+            } else {
+                toast.error("Verification failed. Please try again.");
+            }
+
+            return false;
+        }
+    }
+    async function resendOtp() {
+        const token = useCookie("auth_token").value; // uses auth token
+        common.setValidationError(null);
+
+        try {
+            await $api("/api/auth/resend-verification", {
+                method: "post",
+                headers: {
+                    Authorization: `Bearer ${token}`, // if API is protected
+                },
+            });
+
+            toast.success("OTP has been resent to your email.");
+        } catch (err) {
+            if (err.status === 422) {
+                common.setValidationError(err.data.errors);
+                toast.error("Please correct the errors.");
+            } else {
+                toast.error("Failed to resend OTP.");
+            }
+            throw err;
+        }
+    }
+
+    // resetAuthState
     function resetAuthState() {
         user.value = null;
         isAdmin.value = false;
         useCookie("auth_token").value = null;
-        common.validationError = null;
+        common.setValidationError(null);
         common.Invalid = null;
-
     }
 
     return {
+        resendOtp,
         leaveImpersonation,
         resetPassword,
         verifyResetCode,
@@ -351,6 +399,5 @@ export const useAuthStore = defineStore("auth", () => {
         resetAuthState,
         updateProfile,
         updatePassword,
-        isImpersonating,
     };
 });

@@ -35,7 +35,8 @@ export const useUserStore = defineStore("user", () => {
 
     // Create new user
     async function createUser(userData) {
-        common.validationError = null;
+                        common.setValidationError(null);
+
         try {
             await $api("/api/admin/staff", {
                 method: "post",
@@ -47,7 +48,7 @@ export const useUserStore = defineStore("user", () => {
             return true;
         } catch (err) {
             if (err.status === 422) {
-                common.validationError = err.data.errors;
+                                common.setValidationError(err.data.errors);
                 toast.error("Validation failed.");
             } else {
                 toast.error("Failed to create user.");
@@ -75,7 +76,8 @@ export const useUserStore = defineStore("user", () => {
 
     // Update a user
     async function updateUser(id, updatedData) {
-        common.validationError = null;
+                        common.setValidationError(null);
+
         try {
             await $api(`/api/admin/staff/${id}`, {
                 method: "put",
@@ -88,7 +90,7 @@ export const useUserStore = defineStore("user", () => {
             await fetchUsers();
         } catch (err) {
             if (err.status === 422) {
-                common.validationError = err.data.errors;
+                                common.setValidationError(err.data.errors);
                 toast.error("Validation failed.");
             } else {
                 toast.error("Failed to update user.");
@@ -97,7 +99,8 @@ export const useUserStore = defineStore("user", () => {
     }
     // Update a user password
     async function updateUserPassword(id, updatedData) {
-        common.validationError  = null;
+        common.setValidationError(null);
+
         try {
             await $api(`/api/admin/staff/${id}/update-password`, {
                 method: "put",
@@ -110,7 +113,8 @@ export const useUserStore = defineStore("user", () => {
             await fetchUsers();
         } catch (err) {
             if (err.status === 422) {
-                common.validationError  = err.data.errors;
+                common.setValidationError(err.data.errors);
+
                 toast.error("Validation failed.");
             } else {
                 toast.error("Failed to update user password.");

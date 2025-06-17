@@ -58,6 +58,9 @@
 </template>
 
 <script setup>
+useHead({
+  title: 'Register',
+})
 import { useAuthStore } from "~/stores/auth.js";
 import ValidationError from "~/components/Common/ValidationError.vue";
 import FormLayout from "~/layouts/Guest/FormLayout.vue";

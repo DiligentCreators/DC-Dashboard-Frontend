@@ -21,5 +21,7 @@ import ClientTable from "../../components/client/ClientTable.vue";
 definePageMeta({
   middleware: ["auth"],
 });
-
+useHead({
+  title: 'Dashboard - Clients List',
+})
 </script>

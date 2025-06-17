@@ -189,6 +189,9 @@ const updatePermissions = async () => {
 definePageMeta({
   middleware: ["auth"],
 });
+useHead({
+  title: 'Dashboard - Edit Role',
+})
 </script>
 
 <template>

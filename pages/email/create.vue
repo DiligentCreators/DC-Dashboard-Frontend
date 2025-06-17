@@ -16,5 +16,8 @@ import MainLayout from '~/layouts/Dashboard/MainLayout.vue'
 definePageMeta({
   middleware: ["auth"],
 });
+useHead({
+  title: 'Dashboard - Create Email',
+})
 import CreateTemplate from '@/components/Email/CreateTemplate.vue'
 </script>

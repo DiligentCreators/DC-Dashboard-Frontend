@@ -157,7 +157,9 @@ const options = ref([
 definePageMeta({
   middleware: ["auth"],
 });
-
+useHead({
+  title: 'Dashboard - Edit Client',
+})
 const  authStore = useAuthStore();
 import NoPermission from  '@/components/Common/NoPermission.vue'
 import ClientTable from "~/components/client/ClientTable.vue";
@@ -206,15 +208,15 @@ const permissions = computed(() => authStore.user?.data?.permissions ?? []);
               </div>
             </div>
             <div class="flex gap-3">
-              <UButton
-                  color="success"
-                  variant="outline"
-                  size="sm"
-                  @click="loginAsClient"
-                  :disabled="form.suspended"
-              >
-                Login As Client
-              </UButton>
+<!--              <UButton-->
+<!--                  color="success"-->
+<!--                  variant="outline"-->
+<!--                  size="sm"-->
+<!--                  @click="loginAsClient"-->
+<!--                  :disabled="form.suspended"-->
+<!--              >-->
+<!--                Login As Client-->
+<!--              </UButton>-->
               <UButton
                   color="success"
                   variant="outline"
@@ -404,6 +406,7 @@ const permissions = computed(() => authStore.user?.data?.permissions ?? []);
                       size="md"
                       class="w-full"
                   />
+                  <ValidationError field="password" />
                 </div>
 
                 <div class="mt-4">

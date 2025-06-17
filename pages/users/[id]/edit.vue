@@ -177,6 +177,10 @@ const  authStore = useAuthStore();
 
 const permissions = computed(() => authStore.user?.data?.permissions ?? []);
 import NoPermission from  '@/components/Common/NoPermission.vue'
+
+useHead({
+  title: 'Dashboard - Edit User',
+})
 </script>
 
 <template>
@@ -220,15 +224,15 @@ import NoPermission from  '@/components/Common/NoPermission.vue'
               </div>
             </div>
             <div class="flex gap-3">
-              <UButton
-                  color="success"
-                  variant="outline"
-                  size="sm"
-                  @click="loginAsUser"
-                  :disabled="form.suspended"
-              >
-                Login As User
-              </UButton>
+<!--              <UButton-->
+<!--                  color="success"-->
+<!--                  variant="outline"-->
+<!--                  size="sm"-->
+<!--                  @click="loginAsUser"-->
+<!--                  :disabled="form.suspended"-->
+<!--              >-->
+<!--                Login As User-->
+<!--              </UButton>-->
               <UButton
                   color="success"
                   variant="outline"
@@ -428,6 +432,7 @@ import NoPermission from  '@/components/Common/NoPermission.vue'
                       size="md"
                       class="w-full"
                   />
+                  <ValidationError field="password" />
                 </div>
 
                 <div class="mt-4">
