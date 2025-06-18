@@ -14,6 +14,8 @@ const roleStore = useRoleStore();
 const commonStore = useCommonStore();
 const toast = useToast();
 const authStore = useAuthStore();
+import LoadingSpinner from '@/components/Common/LoadingSpinner.vue';
+import Breadcrumb from "~/components/dashboard/Breadcrumb.vue";
 
 const loadingRole = ref(false);
 const loadingPermissions = ref(false);
@@ -187,15 +189,23 @@ const updatePermissions = async () => {
 };
 
 definePageMeta({
-  middleware: ["auth"],
+  middleware: ["auth","admin"],
 });
 useHead({
   title: 'Dashboard - Edit Role',
 })
+const breadcrumbItems = [
+  { label: 'Dashboard', to: '/dashboard' },
+  { label: 'Role List', to: '/roles/list' },
+  { label: 'Role Edit', to: '/edit' }
+]
 </script>
 
 <template>
   <MainLayout>
+
+    <Breadcrumb :items="breadcrumbItems" />
+
     <div v-if="permissions.includes('roles.update')">
       <!-- Role Name Card -->
       <div class="p-6 bg-white dark:bg-gray-800 shadow-lg rounded-xl mt-6 border border-gray-200 dark:border-gray-700">
@@ -231,8 +241,8 @@ useHead({
 
       <!-- Permissions Card -->
 
-
-        <div class="p-6 bg-white dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-900 shadow-xl rounded-2xl mt-8 border border-gray-200 dark:border-gray-700 transition-all duration-300">
+<LoadingSpinner v-if="loadingRole"/>
+        <div v-else class="p-6 bg-white dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-900 shadow-xl rounded-2xl mt-8 border border-gray-200 dark:border-gray-700 transition-all duration-300">
           <h2 class="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100 tracking-tight">Update Permissions</h2>
           <form @submit.prevent="updatePermissions">
             <div class="overflow-auto mb-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">

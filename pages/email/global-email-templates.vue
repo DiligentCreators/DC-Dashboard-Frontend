@@ -12,7 +12,7 @@
 
 <script setup>
 definePageMeta({
-  middleware: ["auth"],
+  middleware: ["auth","admin"],
 });
 useHead({
   title: 'Dashboard - Global-Email Templates',

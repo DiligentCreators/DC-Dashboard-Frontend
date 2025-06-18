@@ -1,6 +1,6 @@
 <template>
   <FormLayout>
-    <form @submit.prevent="handleVerifyCode" class="space-y-6">
+    <form @submit.prevent="handleVerifyCode" class="space-y-4">
       <h1 class="text-xl font-bold text-gray-800">Verify Code</h1>
 
       <div class="flex justify-between gap-2 max-w-xs mx-auto">
@@ -18,23 +18,24 @@
 
       </div>
 
-      <p v-if="commonStore.validationError" class="text-red-500 text-sm text-center h-5">
-        {{ commonStore.validationError }}
-      </p>
 
-      <div class="text-sm text-gray-500 text-center">
+
+      <div class="text-sm text-gray-700">
         Please check your inbox or spam folder for the verification code.
       </div>
-
+      <p v-if="commonStore.validationError" class="text-red-500 text-sm text-center">
+        {{ commonStore.validationError }}
+      </p>
       <div class="flex justify-center">
         <PrimaryButton
             type="submit"
-            :disabled="loading"
+            :disabled="loading || !isCodeComplete"
             :loading="loading"
             class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-all duration-200"
         >
           Verify Code
         </PrimaryButton>
+
       </div>
 
       <div class="mt-6 text-sm text-red-600 text-center" aria-live="polite">
@@ -66,12 +67,13 @@
             v-else
             type="button"
             @click="handleResendOtp"
-            class="text-gray-500 hover:underline disabled:text-gray-400 disabled:cursor-not-allowed"
+            class="text-gray-800 hover:underline hover:cursor-pointer disabled:text-gray-400 disabled:cursor-not-allowed"
             :disabled="loading"
             aria-label="Resend verification code"
         >
           Resend
         </button>
+
       </div>
     </form>
   </FormLayout>
@@ -165,6 +167,10 @@ const handleVerifyCode = async () => {
     loading.value = false;
   }
 };
+const isCodeComplete = computed(() => {
+  return codeDigits.value.every(digit => digit !== '');
+});
+
 
 useHead({
   title: 'Verify Code',

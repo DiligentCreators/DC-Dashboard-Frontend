@@ -48,14 +48,17 @@ export const useUserStore = defineStore("user", () => {
             return true;
         } catch (err) {
             if (err.status === 422) {
-                                common.setValidationError(err.data.errors);
-                toast.error("Validation failed.");
+                const errors = err.data.errors;
+                common.setValidationError(errors);
+
+                const firstError = Object.values(errors)?.[0]?.[0];
+                toast.error(firstError || "Validation failed.");
             } else {
                 toast.error("Failed to create user.");
             }
             return true;
-
         }
+
     }
 
     // Get a specific user
@@ -90,12 +93,17 @@ export const useUserStore = defineStore("user", () => {
             await fetchUsers();
         } catch (err) {
             if (err.status === 422) {
-                                common.setValidationError(err.data.errors);
-                toast.error("Validation failed.");
+                const errors = err.data.errors;
+                common.setValidationError(errors);
+
+                const firstError = Object.values(errors)?.[0]?.[0];
+                toast.error(firstError || "Validation failed.");
             } else {
                 toast.error("Failed to update user.");
             }
         }
+
+
     }
     // Update a user password
     async function updateUserPassword(id, updatedData) {
@@ -111,15 +119,18 @@ export const useUserStore = defineStore("user", () => {
             });
             toast.success("User password updated successfully");
             await fetchUsers();
-        } catch (err) {
+        }catch (err) {
             if (err.status === 422) {
-                common.setValidationError(err.data.errors);
+                const errors = err.data.errors;
+                common.setValidationError(errors);
 
-                toast.error("Validation failed.");
+                const firstError = Object.values(errors)?.[0]?.[0];
+                toast.error(firstError || "Validation failed.");
             } else {
                 toast.error("Failed to update user password.");
             }
         }
+
     }
     // Delete a user
     async function deleteUser(id) {
@@ -136,6 +147,7 @@ export const useUserStore = defineStore("user", () => {
             toast.error("Failed to delete user.");
         }
     }
+    // restoreUser
     async function restoreUser(id) {
         try {
             await $api(`/api/admin/staff/${id}/restore`, {
@@ -150,6 +162,7 @@ export const useUserStore = defineStore("user", () => {
             toast.error("Failed to restore user.");
         }
     }
+    // forceDeleteUser
     async function forceDeleteUser(id) {
         try {
             await $api(`/api/admin/staff/${id}/force-delete`, {
@@ -164,6 +177,7 @@ export const useUserStore = defineStore("user", () => {
             toast.error("Failed to delete user.");
         }
     }
+    // toggleActiveStatus
     async function toggleActiveStatus(id) {
         try {
             await $api(`/api/admin/${id}/toggle-active`, {
@@ -178,7 +192,7 @@ export const useUserStore = defineStore("user", () => {
             throw err;
         }
     }
-
+    // toggleSuspendedStatus
     async function toggleSuspendedStatus(id) {
         try {
             await $api(`/api/admin/${id}/toggle-suspended`, {

@@ -155,7 +155,7 @@ const options = ref([
   { value: 'other', label: 'Other' }
 ])
 definePageMeta({
-  middleware: ["auth"],
+  middleware: ["auth","admin"],
 });
 useHead({
   title: 'Dashboard - Edit Client',

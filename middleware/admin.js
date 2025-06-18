@@ -8,4 +8,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
     if (!auth.isLoggedIn) {
         return navigateTo('/login')
     }
+
+    if (!auth.user?.data?.is_admin) {
+        return navigateTo('/user-dashboard')
+    }
 })

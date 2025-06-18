@@ -22,7 +22,7 @@ const permissions = computed(() => authStore.user?.data?.permissions ?? []);
 
 
 definePageMeta({
-  middleware: ["auth"],
+  middleware: ["auth","admin"],
 });
 useHead({
   title: 'Dashboard - Users List',

@@ -49,13 +49,15 @@ export const useRoleStore = defineStore("role", () => {
 
         } catch (err) {
             if (err.status === 422) {
-                common.setValidationError(err.data.errors);
-                toast.error("Validation failed.");
+                const errors = err.data.errors;
+                common.setValidationError(errors);
+
+                const firstError = Object.values(errors)?.[0]?.[0];
+                toast.error(firstError || "Validation failed.");
             } else {
                 toast.error("Failed to create role.");
             }
             return false;
-
         }
 
     }
@@ -93,12 +95,16 @@ export const useRoleStore = defineStore("role", () => {
 
         } catch (err) {
             if (err.status === 422) {
-                common.setValidationError(err.data.errors);
-                toast.error("Validation failed.");
+                const errors = err.data.errors;
+                common.setValidationError(errors);
+
+                const firstError = Object.values(errors)?.[0]?.[0];
+                toast.error(firstError || "Validation failed.");
             } else {
                 toast.error("Failed to update role.");
             }
         }
+
     }
     // Update a role
     async function updateRolePassword(id, updatedData) {
@@ -139,6 +145,7 @@ export const useRoleStore = defineStore("role", () => {
             toast.error("Failed to delete role.");
         }
     }
+    // Restore Role
     async function restoreRole(id) {
         try {
             await $api(`/api/admin/roles/${id}/restore`, {
@@ -153,6 +160,7 @@ export const useRoleStore = defineStore("role", () => {
             toast.error("Failed to restore role.");
         }
     }
+    // Force Delete
     async function forceDeleteRole(id) {
         try {
             await $api(`/api/admin/roles/${id}/force-delete`, {

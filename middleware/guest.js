@@ -1,11 +1,15 @@
-export default defineNuxtRouteMiddleware(async (to, from) => {
-    const auth = useAuthStore();
+export default defineNuxtRouteMiddleware(async (to) => {
+    const auth = useAuthStore()
 
     while (auth.isAuthLoading) {
-        await new Promise((r) => setTimeout(r, 50));
+        await new Promise((r) => setTimeout(r, 50))
     }
 
     if (auth.isLoggedIn) {
-        return navigateTo("/dashboard", { replace: true });
+        if (auth.user?.data?.is_admin) {
+            return navigateTo('/dashboard')
+        } else {
+            return navigateTo('/user-dashboard')
+        }
     }
-});
+})

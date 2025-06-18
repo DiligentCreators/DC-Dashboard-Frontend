@@ -534,7 +534,9 @@ const handleFooterBottomImageUpload = (event) => {
     footerForm.bottomImage = file
   }
 }
-
+definePageMeta({
+  middleware: ["auth","admin"],
+});
 
 // SEO
 useHead({

@@ -14,7 +14,7 @@ import NoPermission from  '@/components/Common/NoPermission.vue'
 import MainLayout from '~/layouts/Dashboard/MainLayout.vue'
 
 definePageMeta({
-  middleware: ["auth"],
+  middleware: ["auth","admin"],
 });
 useHead({
   title: 'Dashboard - Create Email',
