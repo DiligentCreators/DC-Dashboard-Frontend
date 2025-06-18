@@ -142,7 +142,7 @@ const breadcrumbItems = [
 
 ]
 definePageMeta({
-  middleware: ["auth"],
+  middleware: ["auth","admin"],
 });
 const  authStore = useAuthStore();
 import NoPermission from  '@/components/Common/NoPermission.vue'

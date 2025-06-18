@@ -15,7 +15,7 @@ const permissions = computed(() => authStore.user?.data?.permissions ?? []);
 import NoPermission from  '@/components/Common/NoPermission.vue'
 
 definePageMeta({
-  middleware: ["auth"],
+  middleware: ["auth","admin"],
 });
 useHead({
   title: 'Dashboard - Email Templates',

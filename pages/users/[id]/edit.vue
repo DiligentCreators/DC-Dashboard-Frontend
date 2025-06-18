@@ -9,7 +9,7 @@ import ValidationError from "~/components/Common/ValidationError.vue";
 import Multiselect from 'vue-multiselect'
 import 'vue-multiselect/dist/vue-multiselect.min.css'
 definePageMeta({
-  middleware: ["auth"],
+  middleware: ["auth","admin"],
 });
 const loading = ref(false)
 const breadcrumbItems = [

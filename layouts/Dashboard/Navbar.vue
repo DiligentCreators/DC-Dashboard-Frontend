@@ -2,7 +2,9 @@
   <header class="bg-white dark:bg-gray-900 shadow px-4 py-3 flex justify-between items-center relative dark:border-b border-gray-700">
     <!-- Sidebar toggle (mobile) -->
     <button class="md:hidden text-xl" @click="$emit('toggleSidebar')">☰</button>
-    <h1 class="text-lg font-bold">Admin Dashboard</h1>
+    <Nuxt-link to="/" >
+      <h1 class="text-lg font-bold">Admin Dashboard</h1>
+    </Nuxt-link>
 
     <!-- Right controls -->
     <div class="flex items-center gap-4">
@@ -25,7 +27,7 @@
 
 
       <!-- Notification Icon -->
-      <button @click="showNotification = !showNotification" class="relative text-gray-600 dark:text-gray-300 hover:text-blue-500">
+      <button v-if="auth.user.data.is_admin" @click="showNotification = !showNotification" class="relative text-gray-600 dark:text-gray-300 hover:text-blue-500">
         <Icon name="heroicons-outline:bell" class="w-6 h-6" />
         <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">3</span>
       </button>
@@ -34,18 +36,29 @@
       <div  class="relative">
         <button @click="dropdownOpen = !dropdownOpen" class="flex items-center gap-1">
           <UAvatar
-              :src="auth.user.data.profile?.avatar || `https://i.pravatar.cc/120?u=${auth.user.data.id}`"
+              :src="auth.user.data.profile?.avatar
+    ? `http://localhost:8000/storage/${auth.user.data.profile.avatar}`
+    : `https://i.pravatar.cc/120?u=${auth.user.data.id}`"
               size="sm"
               :alt="`${auth.user.data.name}'s avatar`"
           />
+
           <Icon name="heroicons:chevron-down" class="w-4 h-4 text-gray-500 dark:text-gray-300" />
         </button>
 
 
         <div v-if="dropdownOpen" class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 shadow-lg rounded-md py-2 z-50">
           <NuxtLink
-              v-if="auth.user.data && auth.user.data.id"
+              v-if="auth.user.data && auth.user.data.id &&  auth.user.data.is_admin"
               to="/profile"
+              class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200"
+          >
+            <Icon name="heroicons-outline:user" class="w-4 h-4" />
+            Profile
+          </NuxtLink>
+          <NuxtLink
+              v-if="auth.user.data && auth.user.data.id &&  !auth.user.data.is_admin"
+              to="/user-profile"
               class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200"
           >
             <Icon name="heroicons-outline:user" class="w-4 h-4" />
@@ -100,6 +113,7 @@ const isDark = computed(() => colorMode.value === 'dark')
 function toggleDark() {
   colorMode.preference = isDark.value ? 'light' : 'dark'
 }
+
 </script>
 
 <style scoped>

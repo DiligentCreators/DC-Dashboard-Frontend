@@ -28,7 +28,7 @@ export const useAuthStore = defineStore("auth", () => {
             const token = response.data?.token;
 
             if (token) {
-                const tokenCookie = useCookie("auth_token", {
+                const tokenCookie = useCookie("verification_token", {
                     maxAge: 60 * 15,
                     sameSite: "lax",
                     secure: false,
@@ -42,16 +42,23 @@ export const useAuthStore = defineStore("auth", () => {
 
             toast.error("Unexpected response. Please try again.");
             return false;
-        } catch (err) {
+        }catch (err) {
             if (err.status === 422) {
-                common.setValidationError(err.data.errors);
-                toast.error("Please review the form and fix the errors.");
+                const errors = err.data.errors;
+                common.setValidationError(errors);
+
+                // Show only the first validation error in a toast
+                const firstKey = Object.keys(errors)[0];
+                const firstError = errors[firstKey][0];
+
+                toast.error(firstError);
             } else {
                 toast.error("Registration failed. Please try again later.");
             }
 
             return false;
         }
+
     }
 
     async function attemptLogin(data) {
@@ -60,6 +67,7 @@ export const useAuthStore = defineStore("auth", () => {
             common.Invalid = null;
 
             await $api(`/sanctum/csrf-cookie`);
+
             const response = await $api(`/api/auth/login`, {
                 body: data,
                 method: "post",
@@ -67,6 +75,7 @@ export const useAuthStore = defineStore("auth", () => {
                     Authorization: `Bearer ${token.value}`,
                 },
             });
+
 
             if (response.data?.access_token) {
                 const tokenCookie = useCookie("auth_token", {
@@ -78,22 +87,38 @@ export const useAuthStore = defineStore("auth", () => {
                 tokenCookie.value = response.data.access_token;
 
                 await fetchUser(response.data.access_token);
-                return navigateTo("/dashboard", { replace: true });
+
+                if ( user.value.data.is_admin) {
+                    return navigateTo("/dashboard", { replace: true });
+                } else {
+                    return navigateTo("/user-dashboard", { replace: true });
+                }
+
+
+
             }
+
         } catch (err) {
-            if (err.status === 422) {
-                common.setValidationError(err.data.errors);
-                toast.error("Please correct the highlighted fields.");
-            } else if (err.status === 400 || err.status === 401) {
-                common.Invalid = err.data.message;
-                toast.error(common.Invalid || "Invalid request.");
-            } else {
-                toast.error("An unexpected error occurred. Please try again later.");
+            const message = err?.data?.message;
+            const errors = err?.data?.errors;
+
+            if (err.status === 422 && errors) {
+                common.setValidationError(errors);
+                const firstErrorKey = Object.keys(errors)[0];
+                const firstErrorMessage = errors[firstErrorKey][0];
+                toast.error(firstErrorMessage);
+            } else if (message) {
+                common.Invalid = message;
+                toast.error(message);
             }
+
             throw err;
         }
+
+
     }
-    // updateProfile
+
+    // updateAdminProfile
     async function updateProfile(payload) {
         const token = useCookie("auth_token"); // Get the token from cookies
 
@@ -118,7 +143,7 @@ export const useAuthStore = defineStore("auth", () => {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    Authorization: `Bearer ${token.value}`, // 👈 Add this
+                    Authorization: `Bearer ${token.value}`,
                 },
             });
 
@@ -128,16 +153,76 @@ export const useAuthStore = defineStore("auth", () => {
         } catch (err) {
             if (err.status === 422) {
                 // Handle validation errors
-                common.setValidationError(err.data.errors);
-                toast.error("Please review the form and fix the errors.");
+                const errors = err.data.errors;
+                common.setValidationError(errors);
+
+                // Show only the first validation error
+                const firstKey = Object.keys(errors)[0];
+                const firstError = errors[firstKey][0];
+                toast.error(firstError);
             } else {
-                // Handle unexpected errors
-                toast.error("Registration failed. Please try again later.");
+                // Show general failure message
+                toast.error("Profile update failed. Please try again.");
             }
-            toast.error('Profile update failed. Please try again.');
-            throw error;
+
+            throw err;
         }
+
     }
+
+    // updateUserProfile
+
+    async function updateProfileUser(payload) {
+        const token = useCookie("auth_token");
+
+        const formData = new FormData();
+
+        // Append all input fields
+        if (payload.name) formData.append('name', payload.name);
+        if (payload.email) formData.append('email', payload.email);
+        if (payload.phone) formData.append('phone', payload.phone);
+        if (payload.address) formData.append('address', payload.address);
+        if (payload.city) formData.append('city', payload.city);
+        if (payload.state) formData.append('state', payload.state);
+        if (payload.country) formData.append('country', payload.country);
+        if (payload.zipcode) formData.append('zipcode', payload.zipcode);
+        if (payload.gender) formData.append('gender', payload.gender);
+        if (payload.dob) formData.append('dob', payload.dob);
+        if (payload.avatar) formData.append('avatar', payload.avatar);
+        formData.append('_method', 'PUT');
+
+        try {
+            const response = await $api('/api/user/profile', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    Authorization: `Bearer ${token.value}`,
+                },
+            });
+
+            user.value = response.data?.user ?? user.value;
+            toast.success('Profile updated successfully!');
+            return response;
+        } catch (err) {
+            if (err.status === 422) {
+                // Handle validation errors
+                const errors = err.data.errors;
+                common.setValidationError(errors);
+
+                // Show only the first validation error
+                const firstKey = Object.keys(errors)[0];
+                const firstError = errors[firstKey][0];
+                toast.error(firstError);
+            } else {
+                // Show general failure message
+                toast.error("Profile update failed. Please try again.");
+            }
+
+            throw err;
+        }
+
+    }
+
     // updatePassword
     async function updatePassword(updatedData) {
         const token = useCookie("auth_token");
@@ -156,19 +241,72 @@ export const useAuthStore = defineStore("auth", () => {
             return true;
         } catch (err) {
             if (err.status === 422) {
-                common.setValidationError(err.data.errors);
-                toast.error("Validation failed.");
-            } else {
-                toast.error("Failed to auth password.");
-            }
-            return false;
+                const errors = err.data.errors;
+                common.setValidationError(errors);
 
+                // Extract and show only the first validation error
+                const firstError = Object.values(errors)[0]?.[0];
+                if (firstError) {
+                    toast.error(firstError);
+                } else {
+                    toast.error("Validation failed.");
+                }
+            } else {
+                toast.error("Failed to authenticate password.");
+            }
+
+            return false;
         }
+
+    }
+    // updatePasswordUser
+    async function updatePasswordUser(updatedData) {
+        const token = useCookie("auth_token");
+
+        common.validationError  = null;
+        try {
+            await $api(`/api/user/profile/password`, {
+                method: "put",
+                body: updatedData,
+                headers: {
+                    Authorization: `Bearer ${token.value}`,
+                },
+            });
+            toast.success("Auth password updated successfully");
+            await fetchUser(token.value);
+            return true;
+        } catch (err) {
+            if (err.status === 422) {
+                const errors = err.data.errors;
+                common.setValidationError(errors);
+
+                // Extract and show only the first validation error
+                const firstError = Object.values(errors)[0]?.[0];
+                if (firstError) {
+                    toast.error(firstError);
+                } else {
+                    toast.error("Validation failed.");
+                }
+            } else {
+                toast.error("Failed to authenticate password.");
+            }
+
+            return false;
+        }
+
     }
     // fetchUser expects a token string
     async function fetchUser(token) {
         if (!token) {
             resetAuthState();
+            return;
+        }
+
+        const verificationToken = useCookie("verification_token").value;
+
+        // If the token being passed is actually a verification token, skip fetching the user
+        if (token === verificationToken) {
+            console.info("Skipping fetchUser because token is for verification only.");
             return;
         }
 
@@ -181,13 +319,20 @@ export const useAuthStore = defineStore("auth", () => {
                 },
             });
 
-            if (error.value || !data.value || !data.value.data.email_verified_at) {
-                toast.error("Failed to fetch user");
+            if (error.value || !data.value) {
+                console.warn("fetchUser error:", error.value || "Empty user data");
+                resetAuthState();
+                return;
+            }
+
+            if (!data.value.data.email_verified_at) {
+                console.info("User is not verified yet, skipping user load.");
                 resetAuthState();
                 return;
             }
 
             user.value = data.value;
+
 
         } catch (err) {
             console.error("Exception in fetchUser:", err);
@@ -196,6 +341,7 @@ export const useAuthStore = defineStore("auth", () => {
             isAuthLoading.value = false;
         }
     }
+
     // logout
     async function logout() {
         try {
@@ -276,12 +422,23 @@ export const useAuthStore = defineStore("auth", () => {
             return true;
         } catch (err) {
             if (err.status === 422) {
-                common.setValidationError(err.data.errors);
+                const errors = err.data.errors;
+                common.setValidationError(errors);
+
+                // Show only the first validation error in toast
+                const firstError = Object.values(errors)?.[0]?.[0];
+                if (firstError) {
+                    toast.error(firstError);
+                } else {
+                    toast.error("Validation failed.");
+                }
             } else {
                 toast.error("Something went wrong. Try again later.");
             }
+
             return false;
         }
+
     }
     // resetPassword
     async function resetPassword(data) {
@@ -301,20 +458,24 @@ export const useAuthStore = defineStore("auth", () => {
             toast.success("Password has been reset successfully.");
         } catch (err) {
             if (err.status === 422) {
-                common.setValidationError(err.data.errors);
-                toast.error("Please correct the errors.");
+                const errors = err.data.errors;
+                common.setValidationError(errors);
+
+                // Show only the first validation error in toast
+                const firstError = Object.values(errors)?.[0]?.[0];
+                toast.error(firstError || "Please correct the errors.");
             } else {
                 toast.error("Failed to reset password.");
             }
+
             throw err;
         }
+
     }
-
-
 
     // verifyResetCode
     async function verifyResetCode(code) {
-        const token = useCookie("auth_token").value;
+        const token = useCookie("verification_token").value;
         common.setValidationError(null);
 
         try {
@@ -327,28 +488,29 @@ export const useAuthStore = defineStore("auth", () => {
             });
 
             // Clear token after successful verification
-            useCookie("auth_token").value = null;
-
+            useCookie("verification_token").value = null;
             toast.success("Code verified successfully! Please log in.");
             return navigateTo("/login");
 
         } catch (err) {
             if (err.status === 422) {
-                // Set specific validation error message
                 const errorMsg = err.data.errors?.code?.[0] || "Invalid code.";
                 common.setValidationError(errorMsg);
+                toast.error(errorMsg);
             } else if (err.status === 401) {
-                // Token expired or not valid
-                common.setValidationError("Session expired. Please request a new verification code.");
+                const sessionMsg = "Session expired. Please request a new verification code.";
+                common.setValidationError(sessionMsg);
+                toast.error(sessionMsg);
             } else {
                 toast.error("Verification failed. Please try again.");
             }
 
             return false;
         }
+
     }
     async function resendOtp() {
-        const token = useCookie("auth_token").value; // uses auth token
+        const token = useCookie("verification_token").value;
         common.setValidationError(null);
 
         try {
@@ -376,9 +538,11 @@ export const useAuthStore = defineStore("auth", () => {
         user.value = null;
         isAdmin.value = false;
         useCookie("auth_token").value = null;
+        useCookie("verification_token").value = null;
         common.setValidationError(null);
         common.Invalid = null;
     }
+
 
     return {
         resendOtp,
@@ -399,5 +563,7 @@ export const useAuthStore = defineStore("auth", () => {
         resetAuthState,
         updateProfile,
         updatePassword,
+        updateProfileUser,
+        updatePasswordUser,
     };
 });

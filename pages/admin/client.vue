@@ -19,7 +19,7 @@ import MainLayout from "~/layouts/Dashboard/MainLayout.vue";
 import ClientTable from "../../components/client/ClientTable.vue";
 
 definePageMeta({
-  middleware: ["auth"],
+  middleware: ["auth","admin"],
 });
 useHead({
   title: 'Dashboard - Clients List',

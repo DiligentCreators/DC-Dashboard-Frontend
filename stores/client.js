@@ -48,14 +48,21 @@ export const useClientStore = defineStore("client", () => {
 
         } catch (err) {
             if (err.status === 422) {
-                common.setValidationError(err.data.errors);
-                toast.error("Validation failed.");
+                const errors = err.data.errors;
+                common.setValidationError(errors);
+
+                // Show only the first validation error in toast
+                const firstError = Object.values(errors)?.[0]?.[0];
+                toast.error(firstError || "Validation failed.");
             } else {
                 toast.error("Failed to create client.");
             }
-            return false;
 
+            return false;
         }
+
+
+
     }
 
     // Get a specific client
@@ -89,12 +96,17 @@ export const useClientStore = defineStore("client", () => {
             await fetchClients();
         } catch (err) {
             if (err.status === 422) {
-                common.setValidationError(err.data.errors);
-                toast.error("Validation failed.");
+                const errors = err.data.errors;
+                common.setValidationError(errors);
+
+                // Show only the first validation error in toast
+                const firstError = Object.values(errors)?.[0]?.[0];
+                toast.error(firstError || "Validation failed.");
             } else {
                 toast.error("Failed to update client.");
             }
         }
+
     }
     // Update a client
     async function updateClientPassword(id, updatedData) {
@@ -112,12 +124,17 @@ export const useClientStore = defineStore("client", () => {
             await fetchClients();
         } catch (err) {
             if (err.status === 422) {
-                common.setValidationError(err.data.errors);
-                toast.error("Validation failed.");
+                const errors = err.data.errors;
+                common.setValidationError(errors);
+
+                // Show only the first validation error in toast
+                const firstError = Object.values(errors)?.[0]?.[0];
+                toast.error(firstError || "Validation failed.");
             } else {
                 toast.error("Failed to update client password.");
             }
         }
+
     }
 
     // Delete a client

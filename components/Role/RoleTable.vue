@@ -1,9 +1,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import Breadcrumb from '~/components/dashboard/Breadcrumb.vue'
-import NProgress from 'nprogress'
-import 'nprogress/nprogress.css'
+
 const  authStore = useAuthStore()
+import LoadingSpinner from '@/components/Common/LoadingSpinner.vue';
 
 const permissions = computed(() => authStore.user?.data?.permissions ?? []);
 // Store and toast
@@ -91,12 +91,14 @@ const breadcrumbItems = [
   { label: 'Role List', to: '/roles' }
 ]
 const loading = ref(false)
+const dataLoading = ref(false)
+
 
 // Fetch clients on mount
 onMounted(async () => {
-  loading.value = true
+  dataLoading.value = true
   await roleStore.fetchRoles()
-  loading.value = false
+  dataLoading.value = false
 })
 
 
@@ -129,13 +131,7 @@ const handleForceDelete = async (id) => {
     loading.value = false
   }
 }
-watchEffect(() => {
-  if (loading.value) {
-    NProgress.start()
-  } else {
-    NProgress.done()
-  }
-})
+
 </script>
 
 <template>
@@ -160,18 +156,19 @@ watchEffect(() => {
         </UButton>
       </div>
     </div>
+    <LoadingSpinner v-if="dataLoading"/>
 
     <!-- Filters Row -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mb-6">
+    <div v-else class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mb-6">
       <div class="p-4 border-b border-gray-200 dark:border-gray-700">
         <div class="flex flex-wrap items-center gap-4">
-          <!-- Page Size -->
-          <select v-model="pageSize" class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-            <option value="10">10</option>
-            <option value="25">25</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-          </select>
+<!--          &lt;!&ndash; Page Size &ndash;&gt;-->
+<!--          <select v-model="pageSize" class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">-->
+<!--            <option value="10">10</option>-->
+<!--            <option value="25">25</option>-->
+<!--            <option value="50">50</option>-->
+<!--            <option value="100">100</option>-->
+<!--          </select>-->
 
           <!-- Search -->
           <input
@@ -309,7 +306,6 @@ watchEffect(() => {
 
       <!-- Empty State -->
       <div v-if="filteredData.length === 0" class="text-center py-12">
-        <div class="text-4xl mb-4">📝</div>
         <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No Roles found</h3>
         <p class="text-gray-500 dark:text-gray-400">Try adjusting your search or filter criteria</p>
       </div>
