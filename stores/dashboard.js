@@ -8,11 +8,12 @@ import {useCommonStore} from "~/stores/common.js";
 export const useDashboardStore = defineStore("dashboard", () => {
     const cards = ref([]);
     const token = useCookie("auth_token");
-    const totalUsers = ref({})
-    const suspendedUser = ref({})
-    const lockedUsers = ref({})
-    const Staffs = ref({})
-    const Users = ref({})
+    const totalUsers = ref(0)
+    const suspendedUser = ref(0)
+    const lockedUsers = ref(0)
+    const Staffs = ref(0)
+    const activeUser = ref(0)
+    const Users = ref(0)
 
 
 
@@ -29,7 +30,7 @@ export const useDashboardStore = defineStore("dashboard", () => {
             lockedUsers.value = data.data.locked_users
             Staffs.value = data.data.Staffs
             Users.value = data.data.Users
-            // cards.value = data.data;
+            activeUser.value = data.data.active_users;
 
 
         } catch (err) {
@@ -47,7 +48,8 @@ export const useDashboardStore = defineStore("dashboard", () => {
         lockedUsers,
         Staffs,
         Users,
-        suspendedUser
+        suspendedUser,
+        activeUser,
 
     };
 });

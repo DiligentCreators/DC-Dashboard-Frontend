@@ -106,15 +106,24 @@ onMounted(() => {
 const stats = computed(() => [
   {
     label: 'Users',
+    count: dashboardStore.Staffs || 0,
+    icon: 'lucide-shield-check',
+    bgClass: 'bg-gradient-to-br from-purple-500 to-purple-600',
+    glowColor: 'rgba(168, 85, 247, 0.5)',
+    growth: 15.7,
+  },
+  {
+    label: 'Clients',
     count: dashboardStore.Users || 0,
     icon: 'lucide-users',
     bgClass: 'bg-gradient-to-br from-blue-500 to-blue-600',
     glowColor: 'rgba(59, 130, 246, 0.5)',
     growth: 12.5,
   },
+
   {
     label: 'Active Users',
-    count: dashboardStore.Users || 0,
+    count: dashboardStore.activeUser || 0,
     icon: 'lucide-user-check',
     bgClass: 'bg-gradient-to-br from-green-500 to-green-600',
     glowColor: 'rgba(34, 197, 94, 0.5)',
@@ -128,14 +137,7 @@ const stats = computed(() => [
     glowColor: 'rgba(239, 68, 68, 0.5)',
     growth: -2.1,
   },
-  {
-    label: 'Staff Members',
-    count: dashboardStore.Staffs || 0,
-    icon: 'lucide-shield-check',
-    bgClass: 'bg-gradient-to-br from-purple-500 to-purple-600',
-    glowColor: 'rgba(168, 85, 247, 0.5)',
-    growth: 15.7,
-  },
+
 ])
 </script>
 
