@@ -22,7 +22,7 @@
     "nuxt": "^4.0.1",
     "pinia": "^3.0.2",
     "sweetalert2": "^11.22.2",
-    "vue": "^3.5.17",
+    "vue": "^3.5.18",
     "vue-chartjs": "^5.3.2",
     "vue-multiselect": "^3.2.0",
     "vue-router": "^4.5.1",
