@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@nuxt/icon": "^2.0.0",
-    "@nuxt/ui": "^4.0.0",
+    "@nuxt/ui": "^4.0.1",
     "@nuxtjs/tailwindcss": "^7.0.0-beta.1",
     "@pinia/nuxt": "^0.11.2",
     "@vueup/vue-quill": "^1.2.0",
