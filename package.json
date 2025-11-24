@@ -15,7 +15,7 @@
     "@nuxt/icon": "^2.1.0",
     "@nuxt/ui": "^4.2.1",
     "@nuxtjs/tailwindcss": "^7.0.0-beta.1",
-    "@pinia/nuxt": "^0.11.2",
+    "@pinia/nuxt": "^0.11.3",
     "@vueup/vue-quill": "^1.2.0",
     "chart.js": "^4.5.1",
     "nprogress": "^0.2.0",
